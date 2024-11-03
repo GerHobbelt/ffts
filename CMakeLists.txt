@@ -7,7 +7,7 @@ set(FFTS_MAJOR 0)
 set(FFTS_MINOR 9)
 set(FFTS_MICRO 0)
 
-set(FFTS_VERSION "ffts-${FFTS_MAJOR}.${FFTS_MINOR}.${FFTS_MICRO}")
+set(FFTS_VERSION "${FFTS_MAJOR}.${FFTS_MINOR}.${FFTS_MICRO}")
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -414,6 +414,8 @@ set(FFTS_SOURCES
   src/ffts.c
   src/ffts_chirp_z.c
   src/ffts_chirp_z.h
+  src/ffts_cpu.c
+  src/ffts_cpu.h
   src/ffts_internal.h
   src/ffts_nd.c
   src/ffts_nd.h
@@ -530,6 +532,14 @@ if(ENABLE_STATIC OR ENABLE_SHARED)
     ffts
     ${FFTS_EXTRA_LIBRARIES}
   )
+
+  add_executable(ffts_cpu_test
+    src/ffts_cpu.c
+    src/ffts_cpu.h
+    tests/cpu_test.c
+  )
+
+  set_target_properties(ffts_cpu_test PROPERTIES COMPILE_DEFINITIONS FFTS_BUILDING_CPU_TEST)
 endif(ENABLE_STATIC OR ENABLE_SHARED)
 
 # generate packageconfig file
