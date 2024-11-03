@@ -4,6 +4,7 @@
   
  Copyright (c) 2013, Michael J. Cree <mcree@orcon.net.nz> 
  Copyright (c) 2012, 2013, Anthony M. Blake <amb@anthonix.com>
+ Copyright (c) 2019, Timothy Pearson <tpearson@raptorengineering.com>
  
  All rights reserved.
 
@@ -39,89 +40,89 @@
 
 #define restrict
 
-typedef vector float V;
+typedef vector float V4SF;
 typedef vector unsigned char VUC;
 
-#define VLIT4(f0,f1,f2,f3) ((V){f0, f1, f2, f3})
+#define V4SF_LIT4(f0,f1,f2,f3) ((V4SF){f0, f1, f2, f3})
 
-#define VADD(x,y) vec_add(x,y)
-#define VSUB(x,y) vec_sub(x,y)
-#define VMUL(x,y) vec_madd(x,y,(V){0})
-#define VMULADD(x,y,z) vec_madd(x,y,z)
-#define VNMULSUB(x,y,z) vec_nmsub(x,y,z)
-#define VXOR(x,y) vec_xor((x),(y))
-#define VSWAPPAIRS(x)						\
+#define V4SF_ADD(x,y) vec_add(x,y)
+#define V4SF_SUB(x,y) vec_sub(x,y)
+#define V4SF_MUL(x,y) vec_madd(x,y,(V4SF){0})
+#define V4SF_MULADD(x,y,z) vec_madd(x,y,z)
+#define V4SF_NMULSUB(x,y,z) vec_nmsub(x,y,z)
+#define V4SF_XOR(x,y) vec_xor((x),(y))
+#define V4SF_SWAPPAIRS(x)					\
     vec_perm(x,x,(VUC){0x04,0x05,0x06,0x07,0x00,0x01,0x02,0x03,	\
 		       0x0c,0x0d,0x0e,0x0f,0x08,0x09,0x0a,0x0b})
 
-#define VBLEND(x,y)						\
+#define V4SF_BLEND(x,y)						\
     vec_perm(x,y,(VUC){0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07,	\
 		       0x18,0x19,0x1a,0x1b,0x1c,0x1d,0x1e,0x1f})
 
-#define VUNPACKHI(x,y)						\
+#define V4SF_UNPACK_HI(x,y)					\
     vec_perm(x,y,(VUC){0x08,0x09,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,	\
 		       0x18,0x19,0x1a,0x1b,0x1c,0x1d,0x1e,0x1f})
 
-#define VUNPACKLO(x,y)						\
+#define V4SF_UNPACK_LO(x,y)					\
     vec_perm(x,y,(VUC){0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07,	\
 		       0x10,0x11,0x12,0x13,0x14,0x15,0x16,0x17})
 
-#define VDUPRE(x)						\
+#define V4SF_DUPLICATE_RE(x)					\
     vec_perm(x,x,(VUC){0x00,0x01,0x02,0x03,0x00,0x01,0x02,0x03,	\
 		       0x18,0x19,0x1a,0x1b,0x18,0x19,0x1a,0x1b})
 
-#define VDUPIM(x)						\
+#define V4SF_DUPLICATE_IM(x)					\
     vec_perm(x,x,(VUC){0x04,0x05,0x06,0x07,0x04,0x05,0x06,0x07,	\
 		       0x1c,0x1d,0x1e,0x1f,0x1c,0x1d,0x1e,0x1f})
 
 
-static inline V IMUL(V d, V re, V im)
+static inline V4SF V4SF_IMUL(V4SF d, V4SF re, V4SF im)
 {
-    im = VMUL(im, VSWAPPAIRS(d));
-    re = VMUL(re, d);
-    return VSUB(re, im);  
+    im = V4SF_MUL(im, V4SF_SWAPPAIRS(d));
+    re = V4SF_MUL(re, d);
+    return V4SF_SUB(re, im);  
 }
 
 
-static inline V IMULJ(V d, V re, V im)
+static inline V4SF V4SF_IMULJ(V4SF d, V4SF re, V4SF im)
 {
-    im = VMUL(im, VSWAPPAIRS(d));
-    return VMULADD(re, d, im);
+    im = V4SF_MUL(im, V4SF_SWAPPAIRS(d));
+    return V4SF_MULADD(re, d, im);
 }
 
 #ifndef __GNUC__
 /* gcc (4.6 and 4.7) ICEs on this code! */
-static inline V MULI(int inv, V x)
+static inline V4SF MULI(int inv, V4SF x)
 {
-    return VXOR(x, inv ? VLIT4(-0.0f,0.0f,-0.0f,0.0f) : VLIT4(0.0f,-0.0f,0.0f,-0.0f));
+    return V4SF_XOR(x, inv ? V4SF_LIT4(-0.0f,0.0f,-0.0f,0.0f) : V4SF_LIT4(0.0f,-0.0f,0.0f,-0.0f));
 }
 #else
 /* but compiles this fine... */
-static inline V MULI(int inv, V x)
+static inline V4SF MULI(int inv, V4SF x)
 {
-    V t;
-    t = inv ? VLIT4(-0.0f,0.0f,-0.0f,0.0f) : VLIT4(0.0f,-0.0f,0.0f,-0.0f);
-    return VXOR(x, t);
+    V4SF t;
+    t = inv ? V4SF_LIT4(-0.0f,0.0f,-0.0f,0.0f) : V4SF_LIT4(0.0f,-0.0f,0.0f,-0.0f);
+    return V4SF_XOR(x, t);
 }
 #endif
 
 
-static inline V IMULI(int inv, V x)
+static inline V4SF V4SF_IMULI(int inv, V4SF x)
 {
-    return VSWAPPAIRS(MULI(inv, x));
+    return V4SF_SWAPPAIRS(MULI(inv, x));
 }
 
 
-static inline V VLD(const void *s)
+static inline V4SF V4SF_LD(const void *s)
 {
-    V *d = (V *)s;
+    V4SF *d = (V4SF *)s;
     return *d;
 }
 
 
-static inline void VST(void *d, V s)
+static inline void V4SF_ST(void *d, V4SF s)
 {
-    V *r = (V *)d;
+    V4SF *r = (V4SF *)d;
     *r = s;
 }
 #endif

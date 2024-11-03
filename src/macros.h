@@ -48,8 +48,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "macros-sse.h"
 #endif
 // NOTE: AltiVec support disabled until updated to provide new V4SF variable type
-//#elif __powerpc__
-//#include "macros-altivec.h"
+#elif __powerpc__
+#include "macros-altivec.h"
 #else
 #include "macros-alpha.h"
 #endif

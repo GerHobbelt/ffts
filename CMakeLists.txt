@@ -447,6 +447,17 @@ set(FFTS_SOURCES
   src/types.h
 )
 
+if(NOT DISABLE_DYNAMIC_CODE)
+  if(CMAKE_SYSTEM_PROCESSOR MATCHES "amd64.*|x86_64.*|AMD64.*")
+    list(APPEND FFTS_SOURCES
+      src/codegen_sse.h
+    )
+  else()
+    message(WARNING "Dynamic code is only supported with x64, disabling dynamic code.")
+    set(DISABLE_DYNAMIC_CODE ON)
+  endif(CMAKE_SYSTEM_PROCESSOR MATCHES "amd64.*|x86_64.*|AMD64.*")
+endif(NOT DISABLE_DYNAMIC_CODE)
+
 if(ENABLE_NEON)
   list(APPEND FFTS_SOURCES
     src/neon.s
@@ -474,17 +485,6 @@ elseif(HAVE_XMMINTRIN_H)
     src/macros-avx.h
     src/macros-sse.h
   )
-
-  if(NOT DISABLE_DYNAMIC_CODE)
-    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-      list(APPEND FFTS_SOURCES
-        src/codegen_sse.h
-      )
-    else()
-      message(WARNING "Dynamic code is only supported with x64, disabling dynamic code.")
-      set(DISABLE_DYNAMIC_CODE ON)
-    endif(CMAKE_SIZEOF_VOID_P EQUAL 8)
-  endif(NOT DISABLE_DYNAMIC_CODE)
 endif(ENABLE_NEON)
 
 if(DISABLE_DYNAMIC_CODE)
