@@ -4,6 +4,7 @@ This file is part of FFTS -- The Fastest Fourier Transform in the South
 
 Copyright (c) 2013, Michael J. Cree <mcree@orcon.net.nz>
 Copyright (c) 2012, 2013, Anthony M. Blake <amb@anthonix.com>
+Copyright (c) 2018, Jukka Ojanen <jukka.ojanen@kolumbus.fi>
 
 All rights reserved.
 
@@ -41,12 +42,27 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifdef HAVE_NEON
 #include "macros-neon.h"
 #elif HAVE_SSE
+#ifdef HAVE_AVX
+#include "macros-avx.h"
+#else
 #include "macros-sse.h"
+#endif
 // NOTE: AltiVec support disabled until updated to provide new V4SF variable type
 //#elif __powerpc__
 //#include "macros-altivec.h"
 #else
 #include "macros-alpha.h"
+#endif
+
+#ifdef FFTS_DOUBLE
+static FFTS_INLINE void
+V4DF_TX2(V4DF *a, V4DF *b)
+{
+    V4DF t0 = V4DF_UNPACK_LO(*a, *b);
+    V4DF t1 = V4DF_UNPACK_HI(*a, *b);
+    *a = t0;
+    *b = t1;
+}
 #endif
 
 static FFTS_INLINE void
@@ -57,6 +73,34 @@ V4SF_TX2(V4SF *a, V4SF *b)
     *a = t0;
     *b = t1;
 }
+
+#ifdef FFTS_DOUBLE
+static FFTS_INLINE void
+V4DF_K_N(int inv,
+         V4DF re,
+         V4DF im,
+         V4DF *r0,
+         V4DF *r1,
+         V4DF *r2,
+         V4DF *r3)
+{
+    V4DF uk, uk2, zk_p, zk_n, zk, zk_d;
+
+    uk  = *r0;
+    uk2 = *r1;
+
+    zk_p = V4DF_IMUL(*r2, re, im);
+    zk_n = V4DF_IMULJ(*r3, re, im);
+
+    zk   = V4DF_ADD(zk_p, zk_n);
+    zk_d = V4DF_IMULI(inv, V4DF_SUB(zk_p, zk_n));
+
+    *r2 = V4DF_SUB(uk, zk);
+    *r0 = V4DF_ADD(uk, zk);
+    *r3 = V4DF_ADD(uk2, zk_d);
+    *r1 = V4DF_SUB(uk2, zk_d);
+}
+#endif
 
 static FFTS_INLINE void
 V4SF_K_N(int inv,
@@ -83,6 +127,45 @@ V4SF_K_N(int inv,
     *r3 = V4SF_ADD(uk2, zk_d);
     *r1 = V4SF_SUB(uk2, zk_d);
 }
+
+#ifdef FFTS_DOUBLE
+static FFTS_INLINE void
+V4DF_L_2_4(int inv,
+           const double *FFTS_RESTRICT i0,
+           const double *FFTS_RESTRICT i1,
+           const double *FFTS_RESTRICT i2,
+           const double *FFTS_RESTRICT i3,
+           V4DF *r0,
+           V4DF *r1,
+           V4DF *r2,
+           V4DF *r3)
+{
+    V4DF t0, t1, t2, t3, t4, t5, t6, t7;
+
+    t0 = V4DF_LD(i0);
+    t1 = V4DF_LD(i1);
+    t2 = V4DF_LD(i2);
+    t3 = V4DF_LD(i3);
+
+    t4 = V4DF_ADD(t0, t1);
+    t5 = V4DF_SUB(t0, t1);
+    t6 = V4DF_ADD(t2, t3);
+    t7 = V4DF_SUB(t2, t3);
+
+    *r0 = V4DF_UNPACK_LO(t4, t5);
+    *r1 = V4DF_UNPACK_LO(t6, t7);
+
+    t5 = V4DF_IMULI(inv, t5);
+
+    t0 = V4DF_ADD(t6, t4);
+    t2 = V4DF_SUB(t6, t4);
+    t1 = V4DF_SUB(t7, t5);
+    t3 = V4DF_ADD(t7, t5);
+
+    *r3 = V4DF_UNPACK_HI(t0, t1);
+    *r2 = V4DF_UNPACK_HI(t2, t3);
+}
+#endif
 
 static FFTS_INLINE void
 V4SF_L_2_4(int inv,
@@ -121,6 +204,46 @@ V4SF_L_2_4(int inv,
     *r2 = V4SF_UNPACK_HI(t2, t3);
 }
 
+#ifdef FFTS_DOUBLE
+static FFTS_INLINE void
+V4DF_L_4_4(int inv,
+           const double *FFTS_RESTRICT i0,
+           const double *FFTS_RESTRICT i1,
+           const double *FFTS_RESTRICT i2,
+           const double *FFTS_RESTRICT i3,
+           V4DF *r0,
+           V4DF *r1,
+           V4DF *r2,
+           V4DF *r3)
+{
+    V4DF t0, t1, t2, t3, t4, t5, t6, t7;
+
+    t0 = V4DF_LD(i0);
+    t1 = V4DF_LD(i1);
+    t2 = V4DF_LD(i2);
+    t3 = V4DF_LD(i3);
+
+    t4 = V4DF_ADD(t0, t1);
+    t5 = V4DF_SUB(t0, t1);
+    t6 = V4DF_ADD(t2, t3);
+
+    t7 = V4DF_IMULI(inv, V4DF_SUB(t2, t3));
+
+    t0 = V4DF_ADD(t4, t6);
+    t2 = V4DF_SUB(t4, t6);
+    t1 = V4DF_SUB(t5, t7);
+    t3 = V4DF_ADD(t5, t7);
+
+    V4DF_TX2(&t0, &t1);
+    V4DF_TX2(&t2, &t3);
+
+    *r0 = t0;
+    *r2 = t1;
+    *r1 = t2;
+    *r3 = t3;
+}
+#endif
+
 static FFTS_INLINE void
 V4SF_L_4_4(int inv,
            const float *FFTS_RESTRICT i0,
@@ -158,6 +281,48 @@ V4SF_L_4_4(int inv,
     *r1 = t2;
     *r3 = t3;
 }
+
+#ifdef FFTS_DOUBLE
+static FFTS_INLINE void
+V4DF_L_4_2(int inv,
+           const double *FFTS_RESTRICT i0,
+           const double *FFTS_RESTRICT i1,
+           const double *FFTS_RESTRICT i2,
+           const double *FFTS_RESTRICT i3,
+           V4DF *r0,
+           V4DF *r1,
+           V4DF *r2,
+           V4DF *r3)
+{
+    V4DF t0, t1, t2, t3, t4, t5, t6, t7;
+
+    t0 = V4DF_LD(i0);
+    t1 = V4DF_LD(i1);
+    t6 = V4DF_LD(i2);
+    t7 = V4DF_LD(i3);
+
+    t2 = V4DF_BLEND(t6, t7);
+    t3 = V4DF_BLEND(t7, t6);
+
+    t4 = V4DF_ADD(t0, t1);
+    t5 = V4DF_SUB(t0, t1);
+    t6 = V4DF_ADD(t2, t3);
+    t7 = V4DF_SUB(t2, t3);
+
+    *r2 = V4DF_UNPACK_HI(t4, t5);
+    *r3 = V4DF_UNPACK_HI(t6, t7);
+
+    t7 = V4DF_IMULI(inv, t7);
+
+    t0 = V4DF_ADD(t4, t6);
+    t2 = V4DF_SUB(t4, t6);
+    t1 = V4DF_SUB(t5, t7);
+    t3 = V4DF_ADD(t5, t7);
+
+    *r0 = V4DF_UNPACK_LO(t0, t1);
+    *r1 = V4DF_UNPACK_LO(t2, t3);
+}
+#endif
 
 static FFTS_INLINE void
 V4SF_L_4_2(int inv,
@@ -198,6 +363,9 @@ V4SF_L_4_2(int inv,
     *r0 = V4SF_UNPACK_LO(t0, t1);
     *r1 = V4SF_UNPACK_LO(t2, t3);
 }
+
+#define V4DF_S_4(r0, r1, r2, r3, o0, o1, o2, o3) \
+    V4DF_ST(o0, r0); V4DF_ST(o1, r1); V4DF_ST(o2, r2); V4DF_ST(o3, r3);
 
 #define V4SF_S_4(r0, r1, r2, r3, o0, o1, o2, o3) \
     V4SF_ST(o0, r0); V4SF_ST(o1, r1); V4SF_ST(o2, r2); V4SF_ST(o3, r3);

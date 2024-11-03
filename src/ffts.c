@@ -418,6 +418,149 @@ cleanup:
     return -1;
 }
 
+#ifdef FFTS_DOUBLE
+static int
+ffts_generate_luts_64f(ffts_plan_t *p, size_t N, size_t leaf_N, int sign)
+{
+    V4DF MULI_SIGN;
+    size_t n_luts;
+    ffts_cpx_64f *w;
+    ffts_cpx_64f *tmp;
+    size_t i, j, m, n;
+    int stride;
+
+    if (sign < 0) {
+        MULI_SIGN = V4DF_LIT4(-0.0, 0.0, -0.0, 0.0);
+    } else {
+        MULI_SIGN = V4DF_LIT4(0.0, -0.0, 0.0, -0.0);
+    }
+
+    /* LUTS */
+    n_luts = ffts_ctzl(N / leaf_N);
+    if (n_luts >= 32) {
+        n_luts = 0;
+    }
+
+    if (n_luts) {
+        size_t lut_size;
+
+        lut_size = leaf_N * (((1 << n_luts) - 2) * 3 + 1) * sizeof(ffts_cpx_64f);
+
+        p->ws = ffts_aligned_malloc(lut_size);
+        if (!p->ws) {
+            goto cleanup;
+        }
+
+        p->ws_is = (size_t*) malloc(n_luts * sizeof(*p->ws_is));
+        if (!p->ws_is) {
+            goto cleanup;
+        }
+    }
+
+    w = p->ws;
+    n = leaf_N * 2;
+
+    /* calculate factors */
+    m = leaf_N << (n_luts - 2);
+    tmp = ffts_aligned_malloc(m * sizeof(ffts_cpx_64f));
+
+    ffts_generate_cosine_sine_pow2_64f(tmp, m);
+
+    /* generate lookup tables */
+    stride = 1 << (n_luts - 1);
+    for (i = 0; i < n_luts; i++) {
+        p->ws_is[i] = w - (ffts_cpx_64f*) p->ws;
+
+        if (!i) {
+            ffts_cpx_64f *w0 = ffts_aligned_malloc(n/4 * sizeof(ffts_cpx_64f));
+            double *fw0 = (double*) w0;
+            double *fw = (double*) w;
+
+            for (j = 0; j < n/4; j++) {
+                w0[j][0] = tmp[j * stride][0];
+                w0[j][1] = tmp[j * stride][1];
+            }
+
+            for (j = 0; j < n/4; j += 2) {
+                V4DF re, im, temp0;
+                temp0 = V4DF_LD(fw0 + j*2);
+                re = V4DF_DUPLICATE_RE(temp0);
+                im = V4DF_DUPLICATE_IM(temp0);
+                im = V4DF_XOR(im, MULI_SIGN);
+                V4DF_ST(fw + j*4 + 0, re);
+                V4DF_ST(fw + j*4 + 4, im);
+            }
+
+            w += n/4 * 2;
+            ffts_aligned_free(w0);
+        } else {
+            ffts_cpx_64f *w0 = (ffts_cpx_64f*) ffts_aligned_malloc(n/8 * sizeof(ffts_cpx_64f));
+            ffts_cpx_64f *w1 = (ffts_cpx_64f*) ffts_aligned_malloc(n/8 * sizeof(ffts_cpx_64f));
+            ffts_cpx_64f *w2 = (ffts_cpx_64f*) ffts_aligned_malloc(n/8 * sizeof(ffts_cpx_64f));
+
+            double *fw0 = (double*) w0;
+            double *fw1 = (double*) w1;
+            double *fw2 = (double*) w2;
+
+            double *fw = (double*)w;
+
+            for (j = 0; j < n/8; j++) {
+                w0[j][0] = tmp[2 * j * stride][0];
+                w0[j][1] = tmp[2 * j * stride][1];
+
+                w1[j][0] = tmp[j * stride][0];
+                w1[j][1] = tmp[j * stride][1];
+
+                w2[j][0] = tmp[(j + (n/8)) * stride][0];
+                w2[j][1] = tmp[(j + (n/8)) * stride][1];
+            }
+
+            for (j = 0; j < n/8; j += 2) {
+                V4DF temp0, temp1, temp2, re, im;
+
+                temp0 = V4DF_LD(fw0 + j*2);
+                re = V4DF_DUPLICATE_RE(temp0);
+                im = V4DF_DUPLICATE_IM(temp0);
+                im = V4DF_XOR(im, MULI_SIGN);
+                V4DF_ST(fw + j*2*6+0, re);
+                V4DF_ST(fw + j*2*6+4, im);
+
+                temp1 = V4DF_LD(fw1 + j*2);
+                re = V4DF_DUPLICATE_RE(temp1);
+                im = V4DF_DUPLICATE_IM(temp1);
+                im = V4DF_XOR(im, MULI_SIGN);
+                V4DF_ST(fw + j*2*6+8 , re);
+                V4DF_ST(fw + j*2*6+12, im);
+
+                temp2 = V4DF_LD(fw2 + j*2);
+                re = V4DF_DUPLICATE_RE(temp2);
+                im = V4DF_DUPLICATE_IM(temp2);
+                im = V4DF_XOR(im, MULI_SIGN);
+                V4DF_ST(fw + j*2*6+16, re);
+                V4DF_ST(fw + j*2*6+20, im);
+            }
+
+            w += n/8 * 3 * 2;
+            ffts_aligned_free(w0);
+            ffts_aligned_free(w1);
+            ffts_aligned_free(w2);
+        }
+
+        n *= 2;
+        stride >>= 1;
+    }
+
+    ffts_aligned_free(tmp);
+
+    p->lastlut = w;
+    p->n_luts = n_luts;
+    return 0;
+
+cleanup:
+    return -1;
+}
+#endif
+
 FFTS_API ffts_plan_t*
 ffts_init_1d(size_t N, int sign)
 {
@@ -549,3 +692,98 @@ cleanup:
     ffts_free_1d(p);
     return NULL;
 }
+
+#ifdef FFTS_DOUBLE
+FFTS_API ffts_plan_t*
+ffts_init_1d_64f(size_t N, int sign)
+{
+    const size_t leaf_N = 8;
+    ffts_plan_t *p;
+
+    if (N < 2) {
+        LOG("FFT size must be greater than 1");
+        return NULL;
+    }
+
+    p = (ffts_plan_t*) calloc(1, sizeof(*p));
+    if (!p) {
+        return NULL;
+    }
+
+    p->destroy = ffts_free_1d;
+    p->N = N;
+
+    if (N >= 32) {
+        /* generate lookup tables */
+        if (ffts_generate_luts_64f(p, N, leaf_N, sign)) {
+            goto cleanup;
+        }
+
+        p->offsets = ffts_init_offsets(N, leaf_N);
+        if (!p->offsets) {
+            goto cleanup;
+        }
+
+        p->is = ffts_init_is(N, leaf_N, 1);
+        if (!p->is) {
+            goto cleanup;
+        }
+
+        p->i0 = N/leaf_N/3 + 1;
+        p->i1 = p->i2 = N/leaf_N/3;
+        if ((N/leaf_N) % 3 > 1) {
+            p->i1++;
+        }
+
+        p->i0 /= 2;
+        p->i1 /= 2;
+
+        if (sign < 0) {
+            p->transform = ffts_static_transform_f_64f;
+        } else {
+            p->transform = ffts_static_transform_i_64f;
+        }
+    } else {
+        switch (N) {
+        case 2:
+            p->transform = &ffts_small_2_64f;
+            break;
+        case 4:
+            if (sign == -1) {
+                p->transform = &ffts_small_forward4_64f;
+            } else if (sign == 1) {
+                p->transform = &ffts_small_backward4_64f;
+            }
+            break;
+        case 8:
+            if (sign == -1) {
+                p->transform = &ffts_small_forward8_64f;
+            } else if (sign == 1) {
+                p->transform = &ffts_small_backward8_64f;
+            }
+            break;
+        case 16:
+        default:
+            if (sign == -1) {
+                p->transform = &ffts_small_forward16_64f;
+            } else {
+                p->transform = &ffts_small_backward16_64f;
+            }
+            break;
+        }
+    }
+
+    return p;
+
+cleanup:
+    ffts_free_1d(p);
+    return NULL;
+}
+#else
+FFTS_API ffts_plan_t*
+ffts_init_1d_64f(size_t N, int sign)
+{
+    /* disabled */
+    return NULL;
+}
+#endif

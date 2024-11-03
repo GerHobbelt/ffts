@@ -3,6 +3,7 @@
  This file is part of FFTS.
 
  Copyright (c) 2012, Anthony M. Blake
+ Copyright (c) 2018, Jukka Ojanen <jukka.ojanen@kolumbus.fi>
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -74,6 +75,9 @@ typedef struct _ffts_plan_t ffts_plan_t;
 */
 FFTS_API ffts_plan_t*
 ffts_init_1d(size_t N, int sign);
+
+FFTS_API ffts_plan_t*
+ffts_init_1d_64f(size_t N, int sign);
 
 FFTS_API ffts_plan_t*
 ffts_init_2d(size_t N1, size_t N2, int sign);

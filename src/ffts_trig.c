@@ -161,138 +161,140 @@ static const FFTS_ALIGN(32) ffts_double_t cos_sin_pi_table[132] = {
     { { 0x00000000, 0x00000000 } }, { { 0x00000000, 0x00000000 } }
 };
 
+#define COS_SIN_TABLE_SIZE 260
+
 /* cos(pi*k/256), sin(pi*k/256) */
-static const FFTS_ALIGN(32) ffts_double_t cos_sin_table[260] = {
+static const FFTS_ALIGN(32) ffts_double_t cos_sin_table[COS_SIN_TABLE_SIZE] = {
     { { 0x00000000, 0x3FF00000 } }, { { 0x00000000, 0x00000000 } },
     { { 0x00000000, 0x00000000 } }, { { 0x00000000, 0x00000000 } },
-    { { 0x169B92DB, 0x3FEFFF62 } }, { { 0xC81FBD0D, 0x3C85DDA3 } },
-    { { 0xFCDEC784, 0x3F8921D1 } }, { { 0xBE836D9D, 0x3C29878E } },
-    { { 0x6084CD0D, 0x3FEFFD88 } }, { { 0x4556E4CB, 0xBC81354D } },
-    { { 0xF7A3667E, 0x3F992155 } }, { { 0x091A0130, 0xBBFB1D63 } },
-    { { 0xEFFEF75D, 0x3FEFFA72 } }, { { 0xCDB25956, 0xBC88B4CD } },
-    { { 0x759455CD, 0x3FA2D865 } }, { { 0x5BA93AC0, 0x3C2686F6 } },
-    { { 0xE3796D7E, 0x3FEFF621 } }, { { 0x2E24AA15, 0xBC6C57BC } },
-    { { 0xF10DD814, 0x3FA91F65 } }, { { 0x0D569A90, 0xBC2912BD } },
-    { { 0x658E71AD, 0x3FEFF095 } }, { { 0xE18A4B9E, 0x3C801A8C } },
-    { { 0x79F820E0, 0x3FAF656E } }, { { 0xE392BFFE, 0xBC22E1EB } },
-    { { 0xAD01883A, 0x3FEFE9CD } }, { { 0xD0C67E35, 0x3C6521EC } },
-    { { 0x92CE19F6, 0x3FB2D520 } }, { { 0xA8BF6B2C, 0xBC49A088 } },
-    { { 0xFCBD5B09, 0x3FEFE1CA } }, { { 0x202A884E, 0x3C6A23E3 } },
-    { { 0x0A9AA419, 0x3FB5F6D0 } }, { { 0xD03F6C9A, 0xBC4F4022 } },
-    { { 0xA3D12526, 0x3FEFD88D } }, { { 0x378811C7, 0xBC887DF6 } },
-    { { 0xBC29B42C, 0x3FB917A6 } }, { { 0xD26ED688, 0xBC3E2718 } },
-    { { 0xFD6DA67B, 0x3FEFCE15 } }, { { 0x830D4C09, 0xBC75DD6F } },
-    { { 0xC79EC2D5, 0x3FBC3785 } }, { { 0xF133FB21, 0xBC24F39D } },
-    { { 0x70E19FD3, 0x3FEFC264 } }, { { 0x68ECACEE, 0x3C81EC86 } },
-    { { 0x56A9730E, 0x3FBF564E } }, { { 0x729AE56D, 0x3C4A2704 } },
-    { { 0x7195D741, 0x3FEFB579 } }, { { 0x7397CC08, 0x3C71BFAC } },
-    { { 0xCEDAF577, 0x3FC139F0 } }, { { 0x4D1B3CFA, 0xBC652343 } },
-    { { 0x7F08A517, 0x3FEFA755 } }, { { 0xCA13571F, 0xBC87A0A8 } },
-    { { 0x6E8E613A, 0x3FC2C810 } }, { { 0xA89A11E0, 0x3C513000 } },
-    { { 0x24C9099B, 0x3FEF97F9 } }, { { 0xEEA5963B, 0xBC8E2AE0 } },
-    { { 0xB1293E5A, 0x3FC45576 } }, { { 0x4119F7B1, 0xBC5285A2 } },
-    { { 0xFA714BA9, 0x3FEF8764 } }, { { 0x778FFCB6, 0x3C7AB256 } },
-    { { 0x448B3FC6, 0x3FC5E214 } }, { { 0x779DDAC6, 0x3C6531FF } },
-    { { 0xA3A12077, 0x3FEF7599 } }, { { 0xD743195C, 0x3C884F31 } },
-    { { 0xDE50BF31, 0x3FC76DD9 } }, { { 0xEC501B2F, 0x3C61D5EE } },
-    { { 0xCFF75CB0, 0x3FEF6297 } }, { { 0x2A361FD3, 0x3C756217 } },
-    { { 0x3C69A60B, 0x3FC8F8B8 } }, { { 0xB9FF8D82, 0xBC626D19 } },
-    { { 0x3B0B2F2D, 0x3FEF4E60 } }, { { 0xE695AC05, 0xBC78EE01 } },
-    { { 0x25B00451, 0x3FCA82A0 } }, { { 0xFFD084AD, 0xBC687905 } },
-    { { 0xAC64E589, 0x3FEF38F3 } }, { { 0xB51F72E6, 0xBC7D7BAF } },
-    { { 0x6A7E4F63, 0x3FCC0B82 } }, { { 0x9E521935, 0xBC1AF143 } },
-    { { 0xF7763ADA, 0x3FEF2252 } }, { { 0x1C8D94AB, 0xBC820CB8 } },
-    { { 0xE5454311, 0x3FCD934F } }, { { 0x277107AD, 0x3C675B92 } },
-    { { 0xFB9230D7, 0x3FEF0A7E } }, { { 0xDC6B4989, 0x3C752C7A } },
-    { { 0x7B215F1B, 0x3FCF19F9 } }, { { 0xF11DA2C4, 0xBC642DEE } },
-    { { 0xA3E473C2, 0x3FEEF178 } }, { { 0x67FE774F, 0x3C86310A } },
-    { { 0x0E37FDAE, 0x3FD04FB8 } }, { { 0xB72583CC, 0xBC0412CD } },
-    { { 0xE7684963, 0x3FEED740 } }, { { 0x91F59CC2, 0x3C7E82C7 } },
-    { { 0x62B1F677, 0x3FD111D2 } }, { { 0x0AB7AA9A, 0x3C7824C2 } },
-    { { 0xC8DF0B74, 0x3FEEBBD8 } }, { { 0x615E7277, 0x3C7C6C8C } },
-    { { 0x3F4CDB3E, 0x3FD1D344 } }, { { 0x1C13519E, 0xBC6720D4 } },
-    { { 0x56C62DDA, 0x3FEE9F41 } }, { { 0xE2E3F81E, 0x3C8760B1 } },
-    { { 0x2ED59F06, 0x3FD29406 } }, { { 0xA2C4612D, 0xBC75D28D } },
-    { { 0xAB4CD10D, 0x3FEE817B } }, { { 0x686B5E0A, 0xBC7D0AFE } },
-    { { 0xC2E18152, 0x3FD35410 } }, { { 0x2F96E062, 0xBC73CB00 } },
-    { { 0xEC48E112, 0x3FEE6288 } }, { { 0xF2847754, 0xBC616B56 } },
-    { { 0x94176601, 0x3FD4135C } }, { { 0x4AFA2518, 0x3C70C97C } },
-    { { 0x4B2BC17E, 0x3FEE426A } }, { { 0x89744882, 0x3C8A8738 } },
-    { { 0x4278E76A, 0x3FD4D1E2 } }, { { 0x18792858, 0x3C624172 } },
-    { { 0x04F686E5, 0x3FEE2121 } }, { { 0x6C126527, 0xBC8014C7 } },
-    { { 0x75AB1FDD, 0x3FD58F9A } }, { { 0xD58CF620, 0xBC1EFDC0 } },
-    { { 0x622DBE2B, 0x3FEDFEAE } }, { { 0x88425567, 0xBC8514EA } },
-    { { 0xDD3F27C6, 0x3FD64C7D } }, { { 0x4A664121, 0x3C510D2B } },
-    { { 0xB6CCC23C, 0x3FEDDB13 } }, { { 0xC6107DB3, 0x3C883C37 } },
-    { { 0x30FA459F, 0x3FD70885 } }, { { 0xE0864C5D, 0xBC744B19 } },
-    { { 0x6238A09B, 0x3FEDB652 } }, { { 0xEAE69460, 0xBC7ADEE7 } },
-    { { 0x311DCCE7, 0x3FD7C3A9 } }, { { 0x1EF3E8D9, 0x3C19A3F2 } },
-    { { 0xCF328D46, 0x3FED906B } }, { { 0x10231AC2, 0x3C7457E6 } },
-    { { 0xA6AEA963, 0x3FD87DE2 } }, { { 0xD3D5A610, 0xBC672CED } },
-    { { 0x73C9E68B, 0x3FED6961 } }, { { 0xC6393D55, 0xBC7E8C61 } },
-    { { 0x63BC93D7, 0x3FD9372A } }, { { 0x9E5AD5B1, 0x3C668431 } },
-    { { 0xD14DC93A, 0x3FED4134 } }, { { 0x95D25AF2, 0xBC84EF52 } },
-    { { 0x43A8ED8A, 0x3FD9EF79 } }, { { 0x290BDBAB, 0x3C66DA81 } },
-    { { 0x743E35DC, 0x3FED17E7 } }, { { 0x3540130A, 0xBC5101DA } },
-    { { 0x2B6D3FCA, 0x3FDAA6C8 } }, { { 0x6EE5CCF7, 0xBC7D5F10 } },
-    { { 0xF43CC773, 0x3FECED7A } }, { { 0xB5AB58AE, 0xBC5E7B6B } },
-    { { 0x09E15CC0, 0x3FDB5D10 } }, { { 0xCB974183, 0x3C65B362 } },
-    { { 0xF3FCFC5C, 0x3FECC1F0 } }, { { 0x3B68F6AB, 0x3C7E5761 } },
-    { { 0xD8011EE7, 0x3FDC1249 } }, { { 0xBB515206, 0xBC7813AA } },
-    { { 0x213411F5, 0x3FEC954B } }, { { 0x1E946603, 0xBC52FB76 } },
-    { { 0x9931C45E, 0x3FDCC66E } }, { { 0x59C37F8F, 0x3C56850E } },
-    { { 0x3488739B, 0x3FEC678B } }, { { 0xC7C5FF5B, 0x3C6D86CA } },
-    { { 0x5B86E389, 0x3FDD7977 } }, { { 0x87BC0575, 0x3C7550EC } },
-    { { 0xF180BDB1, 0x3FEC38B2 } }, { { 0x757C8D07, 0xBC76E0B1 } },
-    { { 0x3806F63B, 0x3FDE2B5D } }, { { 0x1D3C6841, 0x3C5E0D89 } },
-    { { 0x26725549, 0x3FEC08C4 } }, { { 0xD80E2946, 0x3C5B157F } },
-    { { 0x52EF78D6, 0x3FDEDC19 } }, { { 0xC33EDEE6, 0xBC7DD0F7 } },
-    { { 0xAC6F952A, 0x3FEBD7C0 } }, { { 0x32AC700A, 0xBC8825A7 } },
-    { { 0xDBF89ABA, 0x3FDF8BA4 } }, { { 0xC1B776B8, 0xBC32EC1F } },
-    { { 0x673590D2, 0x3FEBA5AA } }, { { 0x370753B6, 0x3C87EA4E } },
-    { { 0x874C3EB7, 0x3FE01CFC } }, { { 0xE7C2368C, 0xBC734A35 } },
-    { { 0x45196E3E, 0x3FEB7283 } }, { { 0x324E6D61, 0xBC8BC69F } },
-    { { 0x9922FFEE, 0x3FE07387 } }, { { 0x4347406C, 0xBC8A5A01 } },
-    { { 0x3EF55712, 0x3FEB3E4D } }, { { 0xBF11A493, 0xBC8EB6B8 } },
-    { { 0x4D5D898F, 0x3FE0C970 } }, { { 0xDE6EE9B2, 0xBC88D3D7 } },
-    { { 0x58150200, 0x3FEB090A } }, { { 0x300FFCCE, 0xBC8926DA } },
-    { { 0x541B4B23, 0x3FE11EB3 } }, { { 0x69ABE4F1, 0xBC8EF23B } },
-    { { 0x9E21D511, 0x3FEAD2BC } }, { { 0x07BEA548, 0xBC847FBE } },
-    { { 0x63DEDB49, 0x3FE1734D } }, { { 0xCCC50575, 0xBC87EEF2 } },
-    { { 0x290EA1A3, 0x3FEA9B66 } }, { { 0xE8B6DAC8, 0x3C39F630 } },
-    { { 0x39AE68C8, 0x3FE1C73B } }, { { 0x267F6600, 0x3C8B25DD } },
-    { { 0x1B02FAE2, 0x3FEA6309 } }, { { 0x52248D10, 0xBC7E9111 } },
-    { { 0x9933EB59, 0x3FE21A79 } }, { { 0x77C68FB2, 0xBC83A7B1 } },
-    { { 0xA0462782, 0x3FEA29A7 } }, { { 0x015DF175, 0xBC7128BB } },
-    { { 0x4CDD12DF, 0x3FE26D05 } }, { { 0x3EF3770C, 0xBC85DA74 } },
-    { { 0xEF29AF94, 0x3FE9EF43 } }, { { 0xB60445C2, 0x3C7B1DFC } },
-    { { 0x25FAF3EA, 0x3FE2BEDB } }, { { 0xC796EE46, 0xBC514981 } },
-    { { 0x47F38741, 0x3FE9B3E0 } }, { { 0x86712474, 0xBC830EE2 } },
-    { { 0xFCE17035, 0x3FE30FF7 } }, { { 0x26F74A6F, 0xBC6EFCC6 } },
-    { { 0xF4C7D742, 0x3FE9777E } }, { { 0xA240665E, 0xBC815479 } },
-    { { 0xB10659F3, 0x3FE36058 } }, { { 0xA35857E7, 0xBC81FCB3 } },
-    { { 0x499263FB, 0x3FE93A22 } }, { { 0xA920DF0B, 0x3C83D419 } },
-    { { 0x292050B9, 0x3FE3AFFA } }, { { 0xE3954964, 0x3C7E3E25 } },
-    { { 0xA3EF940D, 0x3FE8FBCC } }, { { 0x9C86F2F1, 0xBC66DFA9 } },
-    { { 0x534556D4, 0x3FE3FED9 } }, { { 0x608C5061, 0x3C836916 } },
-    { { 0x6B151741, 0x3FE8BC80 } }, { { 0x2ED1336D, 0xBC82C5E1 } },
-    { { 0x25091DD6, 0x3FE44CF3 } }, { { 0x2CFDC6B3, 0x3C68076A } },
-    { { 0x0FBA2EBF, 0x3FE87C40 } }, { { 0x0C3F64CD, 0xBC82DABC } },
-    { { 0x9B9B0939, 0x3FE49A44 } }, { { 0x6D719B94, 0xBC827EE1 } },
-    { { 0x0BFF976E, 0x3FE83B0E } }, { { 0xF8EA3475, 0xBC76F420 } },
-    { { 0xBBE3E5E9, 0x3FE4E6CA } }, { { 0xEDCEB327, 0x3C63C293 } },
-    { { 0xE3571771, 0x3FE7F8EC } }, { { 0xCE93C917, 0xBC89C8D8 } },
-    { { 0x92A35596, 0x3FE53282 } }, { { 0x89DA0257, 0xBC7A12EB } },
-    { { 0x226AAFAF, 0x3FE7B5DF } }, { { 0xACDF0AD7, 0xBC70F537 } },
-    { { 0x348CECA0, 0x3FE57D69 } }, { { 0x992BFBB2, 0xBC875720 } },
-    { { 0x5F037261, 0x3FE771E7 } }, { { 0x8D84068F, 0x3C75CFCE } },
-    { { 0xBE65018C, 0x3FE5C77B } }, { { 0x9C0BC32A, 0x3C8069EA } },
-    { { 0x37EFFF96, 0x3FE72D08 } }, { { 0x0F1D915C, 0x3C80D4EF } },
-    { { 0x551D2CDF, 0x3FE610B7 } }, { { 0x52FF2A37, 0xBC7251B3 } },
-    { { 0x54EAA8AF, 0x3FE6E744 } }, { { 0xC84E226E, 0xBC8DBC03 } },
-    { { 0x25F0783D, 0x3FE65919 } }, { { 0xFBF5DE23, 0x3C8C3D64 } },
-    { { 0x667F3BCD, 0x3FE6A09E } }, { { 0x13B26456, 0xBC8BDD34 } },
-    { { 0x667F3BCD, 0x3FE6A09E } }, { { 0x13B26456, 0xBC8BDD34 } }
+    { { 0x169B92DB, 0x3FEFFF62 } }, { { 0xFCDEC784, 0x3F8921D1 } },
+    { { 0xC81FBD0D, 0x3C85DDA3 } }, { { 0xBE836D9D, 0x3C29878E } },
+    { { 0x6084CD0D, 0x3FEFFD88 } }, { { 0xF7A3667E, 0x3F992155 } },
+    { { 0x4556E4CB, 0xBC81354D } }, { { 0x091A0130, 0xBBFB1D63 } },
+    { { 0xEFFEF75D, 0x3FEFFA72 } }, { { 0x759455CD, 0x3FA2D865 } },
+    { { 0xCDB25956, 0xBC88B4CD } }, { { 0x5BA93AC0, 0x3C2686F6 } },
+    { { 0xE3796D7E, 0x3FEFF621 } }, { { 0xF10DD814, 0x3FA91F65 } },
+    { { 0x2E24AA15, 0xBC6C57BC } }, { { 0x0D569A90, 0xBC2912BD } },
+    { { 0x658E71AD, 0x3FEFF095 } }, { { 0x79F820E0, 0x3FAF656E } },
+    { { 0xE18A4B9E, 0x3C801A8C } }, { { 0xE392BFFE, 0xBC22E1EB } },
+    { { 0xAD01883A, 0x3FEFE9CD } }, { { 0x92CE19F6, 0x3FB2D520 } },
+    { { 0xD0C67E35, 0x3C6521EC } }, { { 0xA8BF6B2C, 0xBC49A088 } },
+    { { 0xFCBD5B09, 0x3FEFE1CA } }, { { 0x0A9AA419, 0x3FB5F6D0 } },
+    { { 0x202A884E, 0x3C6A23E3 } }, { { 0xD03F6C9A, 0xBC4F4022 } },
+    { { 0xA3D12526, 0x3FEFD88D } }, { { 0xBC29B42C, 0x3FB917A6 } },
+    { { 0x378811C7, 0xBC887DF6 } }, { { 0xD26ED688, 0xBC3E2718 } },
+    { { 0xFD6DA67B, 0x3FEFCE15 } }, { { 0xC79EC2D5, 0x3FBC3785 } },
+    { { 0x830D4C09, 0xBC75DD6F } }, { { 0xF133FB21, 0xBC24F39D } },
+    { { 0x70E19FD3, 0x3FEFC264 } }, { { 0x56A9730E, 0x3FBF564E } },
+    { { 0x68ECACEE, 0x3C81EC86 } }, { { 0x729AE56D, 0x3C4A2704 } },
+    { { 0x7195D741, 0x3FEFB579 } }, { { 0xCEDAF577, 0x3FC139F0 } },
+    { { 0x7397CC08, 0x3C71BFAC } }, { { 0x4D1B3CFA, 0xBC652343 } },
+    { { 0x7F08A517, 0x3FEFA755 } }, { { 0x6E8E613A, 0x3FC2C810 } },
+    { { 0xCA13571F, 0xBC87A0A8 } }, { { 0xA89A11E0, 0x3C513000 } },
+    { { 0x24C9099B, 0x3FEF97F9 } }, { { 0xB1293E5A, 0x3FC45576 } },
+    { { 0xEEA5963B, 0xBC8E2AE0 } }, { { 0x4119F7B1, 0xBC5285A2 } },
+    { { 0xFA714BA9, 0x3FEF8764 } }, { { 0x448B3FC6, 0x3FC5E214 } },
+    { { 0x778FFCB6, 0x3C7AB256 } }, { { 0x779DDAC6, 0x3C6531FF } },
+    { { 0xA3A12077, 0x3FEF7599 } }, { { 0xDE50BF31, 0x3FC76DD9 } },
+    { { 0xD743195C, 0x3C884F31 } }, { { 0xEC501B2F, 0x3C61D5EE } },
+    { { 0xCFF75CB0, 0x3FEF6297 } }, { { 0x3C69A60B, 0x3FC8F8B8 } },
+    { { 0x2A361FD3, 0x3C756217 } }, { { 0xB9FF8D82, 0xBC626D19 } },
+    { { 0x3B0B2F2D, 0x3FEF4E60 } }, { { 0x25B00451, 0x3FCA82A0 } },
+    { { 0xE695AC05, 0xBC78EE01 } }, { { 0xFFD084AD, 0xBC687905 } },
+    { { 0xAC64E589, 0x3FEF38F3 } }, { { 0x6A7E4F63, 0x3FCC0B82 } },
+    { { 0xB51F72E6, 0xBC7D7BAF } }, { { 0x9E521935, 0xBC1AF143 } },
+    { { 0xF7763ADA, 0x3FEF2252 } }, { { 0xE5454311, 0x3FCD934F } },
+    { { 0x1C8D94AB, 0xBC820CB8 } }, { { 0x277107AD, 0x3C675B92 } },
+    { { 0xFB9230D7, 0x3FEF0A7E } }, { { 0x7B215F1B, 0x3FCF19F9 } },
+    { { 0xDC6B4989, 0x3C752C7A } }, { { 0xF11DA2C4, 0xBC642DEE } },
+    { { 0xA3E473C2, 0x3FEEF178 } }, { { 0x0E37FDAE, 0x3FD04FB8 } },
+    { { 0x67FE774F, 0x3C86310A } }, { { 0xB72583CC, 0xBC0412CD } },
+    { { 0xE7684963, 0x3FEED740 } }, { { 0x62B1F677, 0x3FD111D2 } },
+    { { 0x91F59CC2, 0x3C7E82C7 } }, { { 0x0AB7AA9A, 0x3C7824C2 } },
+    { { 0xC8DF0B74, 0x3FEEBBD8 } }, { { 0x3F4CDB3E, 0x3FD1D344 } },
+    { { 0x615E7277, 0x3C7C6C8C } }, { { 0x1C13519E, 0xBC6720D4 } },
+    { { 0x56C62DDA, 0x3FEE9F41 } }, { { 0x2ED59F06, 0x3FD29406 } },
+    { { 0xE2E3F81E, 0x3C8760B1 } }, { { 0xA2C4612D, 0xBC75D28D } },
+    { { 0xAB4CD10D, 0x3FEE817B } }, { { 0xC2E18152, 0x3FD35410 } },
+    { { 0x686B5E0A, 0xBC7D0AFE } }, { { 0x2F96E062, 0xBC73CB00 } },
+    { { 0xEC48E112, 0x3FEE6288 } }, { { 0x94176601, 0x3FD4135C } },
+    { { 0xF2847754, 0xBC616B56 } }, { { 0x4AFA2518, 0x3C70C97C } },
+    { { 0x4B2BC17E, 0x3FEE426A } }, { { 0x4278E76A, 0x3FD4D1E2 } },
+    { { 0x89744882, 0x3C8A8738 } }, { { 0x18792858, 0x3C624172 } },
+    { { 0x04F686E5, 0x3FEE2121 } }, { { 0x75AB1FDD, 0x3FD58F9A } },
+    { { 0x6C126527, 0xBC8014C7 } }, { { 0xD58CF620, 0xBC1EFDC0 } },
+    { { 0x622DBE2B, 0x3FEDFEAE } }, { { 0xDD3F27C6, 0x3FD64C7D } },
+    { { 0x88425567, 0xBC8514EA } }, { { 0x4A664121, 0x3C510D2B } },
+    { { 0xB6CCC23C, 0x3FEDDB13 } }, { { 0x30FA459F, 0x3FD70885 } },
+    { { 0xC6107DB3, 0x3C883C37 } }, { { 0xE0864C5D, 0xBC744B19 } },
+    { { 0x6238A09B, 0x3FEDB652 } }, { { 0x311DCCE7, 0x3FD7C3A9 } },
+    { { 0xEAE69460, 0xBC7ADEE7 } }, { { 0x1EF3E8D9, 0x3C19A3F2 } },
+    { { 0xCF328D46, 0x3FED906B } }, { { 0xA6AEA963, 0x3FD87DE2 } },
+    { { 0x10231AC2, 0x3C7457E6 } }, { { 0xD3D5A610, 0xBC672CED } },
+    { { 0x73C9E68B, 0x3FED6961 } }, { { 0x63BC93D7, 0x3FD9372A } },
+    { { 0xC6393D55, 0xBC7E8C61 } }, { { 0x9E5AD5B1, 0x3C668431 } },
+    { { 0xD14DC93A, 0x3FED4134 } }, { { 0x43A8ED8A, 0x3FD9EF79 } },
+    { { 0x95D25AF2, 0xBC84EF52 } }, { { 0x290BDBAB, 0x3C66DA81 } },
+    { { 0x743E35DC, 0x3FED17E7 } }, { { 0x2B6D3FCA, 0x3FDAA6C8 } },
+    { { 0x3540130A, 0xBC5101DA } }, { { 0x6EE5CCF7, 0xBC7D5F10 } },
+    { { 0xF43CC773, 0x3FECED7A } }, { { 0x09E15CC0, 0x3FDB5D10 } },
+    { { 0xB5AB58AE, 0xBC5E7B6B } }, { { 0xCB974183, 0x3C65B362 } },
+    { { 0xF3FCFC5C, 0x3FECC1F0 } }, { { 0xD8011EE7, 0x3FDC1249 } },
+    { { 0x3B68F6AB, 0x3C7E5761 } }, { { 0xBB515206, 0xBC7813AA } },
+    { { 0x213411F5, 0x3FEC954B } }, { { 0x9931C45E, 0x3FDCC66E } },
+    { { 0x1E946603, 0xBC52FB76 } }, { { 0x59C37F8F, 0x3C56850E } },
+    { { 0x3488739B, 0x3FEC678B } }, { { 0x5B86E389, 0x3FDD7977 } },
+    { { 0xC7C5FF5B, 0x3C6D86CA } }, { { 0x87BC0575, 0x3C7550EC } },
+    { { 0xF180BDB1, 0x3FEC38B2 } }, { { 0x3806F63B, 0x3FDE2B5D } },
+    { { 0x757C8D07, 0xBC76E0B1 } }, { { 0x1D3C6841, 0x3C5E0D89 } },
+    { { 0x26725549, 0x3FEC08C4 } }, { { 0x52EF78D6, 0x3FDEDC19 } },
+    { { 0xD80E2946, 0x3C5B157F } }, { { 0xC33EDEE6, 0xBC7DD0F7 } },
+    { { 0xAC6F952A, 0x3FEBD7C0 } }, { { 0xDBF89ABA, 0x3FDF8BA4 } },
+    { { 0x32AC700A, 0xBC8825A7 } }, { { 0xC1B776B8, 0xBC32EC1F } },
+    { { 0x673590D2, 0x3FEBA5AA } }, { { 0x874C3EB7, 0x3FE01CFC } },
+    { { 0x370753B6, 0x3C87EA4E } }, { { 0xE7C2368C, 0xBC734A35 } },
+    { { 0x45196E3E, 0x3FEB7283 } }, { { 0x9922FFEE, 0x3FE07387 } },
+    { { 0x324E6D61, 0xBC8BC69F } }, { { 0x4347406C, 0xBC8A5A01 } },
+    { { 0x3EF55712, 0x3FEB3E4D } }, { { 0x4D5D898F, 0x3FE0C970 } },
+    { { 0xBF11A493, 0xBC8EB6B8 } }, { { 0xDE6EE9B2, 0xBC88D3D7 } },
+    { { 0x58150200, 0x3FEB090A } }, { { 0x541B4B23, 0x3FE11EB3 } },
+    { { 0x300FFCCE, 0xBC8926DA } }, { { 0x69ABE4F1, 0xBC8EF23B } },
+    { { 0x9E21D511, 0x3FEAD2BC } }, { { 0x63DEDB49, 0x3FE1734D } },
+    { { 0x07BEA548, 0xBC847FBE } }, { { 0xCCC50575, 0xBC87EEF2 } },
+    { { 0x290EA1A3, 0x3FEA9B66 } }, { { 0x39AE68C8, 0x3FE1C73B } },
+    { { 0xE8B6DAC8, 0x3C39F630 } }, { { 0x267F6600, 0x3C8B25DD } },
+    { { 0x1B02FAE2, 0x3FEA6309 } }, { { 0x9933EB59, 0x3FE21A79 } },
+    { { 0x52248D10, 0xBC7E9111 } }, { { 0x77C68FB2, 0xBC83A7B1 } },
+    { { 0xA0462782, 0x3FEA29A7 } }, { { 0x4CDD12DF, 0x3FE26D05 } },
+    { { 0x015DF175, 0xBC7128BB } }, { { 0x3EF3770C, 0xBC85DA74 } },
+    { { 0xEF29AF94, 0x3FE9EF43 } }, { { 0x25FAF3EA, 0x3FE2BEDB } },
+    { { 0xB60445C2, 0x3C7B1DFC } }, { { 0xC796EE46, 0xBC514981 } },
+    { { 0x47F38741, 0x3FE9B3E0 } }, { { 0xFCE17035, 0x3FE30FF7 } },
+    { { 0x86712474, 0xBC830EE2 } }, { { 0x26F74A6F, 0xBC6EFCC6 } },
+    { { 0xF4C7D742, 0x3FE9777E } }, { { 0xB10659F3, 0x3FE36058 } },
+    { { 0xA240665E, 0xBC815479 } }, { { 0xA35857E7, 0xBC81FCB3 } },
+    { { 0x499263FB, 0x3FE93A22 } }, { { 0x292050B9, 0x3FE3AFFA } },
+    { { 0xA920DF0B, 0x3C83D419 } }, { { 0xE3954964, 0x3C7E3E25 } },
+    { { 0xA3EF940D, 0x3FE8FBCC } }, { { 0x534556D4, 0x3FE3FED9 } },
+    { { 0x9C86F2F1, 0xBC66DFA9 } }, { { 0x608C5061, 0x3C836916 } },
+    { { 0x6B151741, 0x3FE8BC80 } }, { { 0x25091DD6, 0x3FE44CF3 } },
+    { { 0x2ED1336D, 0xBC82C5E1 } }, { { 0x2CFDC6B3, 0x3C68076A } },
+    { { 0x0FBA2EBF, 0x3FE87C40 } }, { { 0x9B9B0939, 0x3FE49A44 } },
+    { { 0x0C3F64CD, 0xBC82DABC } }, { { 0x6D719B94, 0xBC827EE1 } },
+    { { 0x0BFF976E, 0x3FE83B0E } }, { { 0xBBE3E5E9, 0x3FE4E6CA } },
+    { { 0xF8EA3475, 0xBC76F420 } }, { { 0xEDCEB327, 0x3C63C293 } },
+    { { 0xE3571771, 0x3FE7F8EC } }, { { 0x92A35596, 0x3FE53282 } },
+    { { 0xCE93C917, 0xBC89C8D8 } }, { { 0x89DA0257, 0xBC7A12EB } },
+    { { 0x226AAFAF, 0x3FE7B5DF } }, { { 0x348CECA0, 0x3FE57D69 } },
+    { { 0xACDF0AD7, 0xBC70F537 } }, { { 0x992BFBB2, 0xBC875720 } },
+    { { 0x5F037261, 0x3FE771E7 } }, { { 0xBE65018C, 0x3FE5C77B } },
+    { { 0x8D84068F, 0x3C75CFCE } }, { { 0x9C0BC32A, 0x3C8069EA } },
+    { { 0x37EFFF96, 0x3FE72D08 } }, { { 0x551D2CDF, 0x3FE610B7 } },
+    { { 0x0F1D915C, 0x3C80D4EF } }, { { 0x52FF2A37, 0xBC7251B3 } },
+    { { 0x54EAA8AF, 0x3FE6E744 } }, { { 0x25F0783D, 0x3FE65919 } },
+    { { 0xC84E226E, 0xBC8DBC03 } }, { { 0xFBF5DE23, 0x3C8C3D64 } },
+    { { 0x667F3BCD, 0x3FE6A09E } }, { { 0x667F3BCD, 0x3FE6A09E } },
+    { { 0x13B26456, 0xBC8BDD34 } }, { { 0x13B26456, 0xBC8BDD34 } }
 };
 
 /* cos(pi * x), x=[0;1/512] */
@@ -739,10 +741,11 @@ ffts_generate_cosine_sine_pow2_32f(ffts_cpx_32f *const table, int table_size)
 {
     static const __m128d sign_swap = { 0.0, -0.0 };
     const __m128d *FFTS_RESTRICT ct;
+    const ffts_double_t *FFTS_RESTRICT cst;
     const ffts_double_t *FFTS_RESTRICT hs;
     __m128d FFTS_ALIGN(16) w[32];
     __m128d FFTS_ALIGN(16) h[32];
-    int i, log_2, offset;
+    int i, log_2, offset, step;
 
     /* size must be a power of two */
     if (!table || !table_size || (table_size & (table_size - 1))) {
@@ -763,13 +766,16 @@ ffts_generate_cosine_sine_pow2_32f(ffts_cpx_32f *const table, int table_size)
         goto mid_point;
     }
 
+    cst = (const ffts_double_t*)
+        FFTS_ASSUME_ALIGNED_32(&cos_sin_table);
+
     /* generate small tables from lookup table */
     if (table_size <= 128) {
-        const int step = 128 / table_size;
+        step = 128 / table_size;
 
         for (i = 1; i < table_size/2; i++) {
-            float cosine = (float) cos_sin_table[4 * i * step + 0].d;
-            float sine   = (float) cos_sin_table[4 * i * step + 2].d;
+            float cosine = (float) cst[4 * i * step + 0].d;
+            float sine   = (float) cst[4 * i * step + 1].d;
 
             table[i          + 0][0] = cosine;
             table[i          + 0][1] = -sine;
@@ -785,6 +791,7 @@ ffts_generate_cosine_sine_pow2_32f(ffts_cpx_32f *const table, int table_size)
     log_2 = ffts_ctzl(table_size);
     FFTS_ASSUME(log_2 > 1);
     offset = 32 - log_2;
+    step = log_2 - 8;
     ct = (const __m128d*)
         FFTS_ASSUME_ALIGNED_32(&cos_sin_pi_table[4 * offset]);
     hs = FFTS_ASSUME_ALIGNED_16(&half_secant[2 * offset]);
@@ -808,9 +815,20 @@ ffts_generate_cosine_sine_pow2_32f(ffts_cpx_32f *const table, int table_size)
         _mm_storel_pi((__m64*) &table[table_size - i], _mm_cvtpd_ps(
             _mm_or_pd(_mm_shuffle_pd(w[log_2], w[log_2], 1), sign_swap)));
 
-        /* skip and find next trailing zero */
-        offset = (log_2 + 2 + ffts_ctzl(~i >> (log_2 + 2)));
-        w[log_2] = _mm_mul_pd(h[log_2], _mm_add_pd(w[log_2 + 1], w[offset]));
+        /* use lookup table when possible */
+        if (log_2 > step) {
+            offset = ((2 * i) >> step) + (4 << (log_2 - step));
+            if (offset >= COS_SIN_TABLE_SIZE) {
+                offset = COS_SIN_TABLE_SIZE - (2 << (log_2 - step)) - 4;
+                w[log_2] = _mm_loadr_pd(&cst[offset].d);
+            } else {
+                w[log_2] = _mm_load_pd(&cst[offset].d);
+            }
+        } else {
+            /* skip and find next trailing zero */
+            offset = (log_2 + 2 + ffts_ctzl(~i >> (log_2 + 2)));
+            w[log_2] = _mm_mul_pd(h[log_2], _mm_add_pd(w[log_2 + 1], w[offset]));
+        }
     }
 
 mid_point:
@@ -826,11 +844,12 @@ ffts_generate_cosine_sine_pow2_64f(ffts_cpx_64f *const table, int table_size)
 {
     static const __m128d sign_swap = { 0.0, -0.0 };
     const struct ffts_dd2_t *FFTS_RESTRICT ct;
+    const ffts_double_t *FFTS_RESTRICT cst;
     const ffts_double_t *FFTS_RESTRICT hs;
     struct ffts_dd2_t FFTS_ALIGN(16) w[32];
     struct ffts_dd2_t FFTS_ALIGN(16) h[32];
     struct ffts_dd2_t FFTS_ALIGN(16) sum;
-    int i, log_2, offset;
+    int i, log_2, offset, step;
 
     /* size must be a power of two */
     if (!table || !table_size || (table_size & (table_size - 1))) {
@@ -851,13 +870,16 @@ ffts_generate_cosine_sine_pow2_64f(ffts_cpx_64f *const table, int table_size)
         goto mid_point;
     }
 
+    cst = (const ffts_double_t*)
+        FFTS_ASSUME_ALIGNED_32(&cos_sin_table);
+
     /* generate small tables from lookup table */
     if (table_size <= 128) {
-        const int step = 128 / table_size;
+        step = 128 / table_size;
 
         for (i = 1; i < table_size/2; i++) {
-            double cosine = cos_sin_table[4 * i * step + 0].d;
-            double sine   = cos_sin_table[4 * i * step + 2].d;
+            double cosine = cst[4 * i * step + 0].d;
+            double sine   = cst[4 * i * step + 1].d;
 
             table[i          + 0][0] = cosine;
             table[i          + 0][1] = -sine;
@@ -873,6 +895,7 @@ ffts_generate_cosine_sine_pow2_64f(ffts_cpx_64f *const table, int table_size)
     log_2 = ffts_ctzl(table_size);
     FFTS_ASSUME(log_2 > 1);
     offset = 32 - log_2;
+    step = log_2 - 8;
     ct = (const struct ffts_dd2_t*)
         FFTS_ASSUME_ALIGNED_32(&cos_sin_pi_table[4 * offset]);
     hs = FFTS_ASSUME_ALIGNED_16(&half_secant[2 * offset]);
@@ -897,10 +920,23 @@ ffts_generate_cosine_sine_pow2_64f(ffts_cpx_64f *const table, int table_size)
         _mm_store_pd((double*) &table[table_size - i],
             _mm_or_pd(_mm_shuffle_pd(w[log_2].hi, w[log_2].hi, 1), sign_swap));
 
-        /* skip and find next trailing zero */
-        offset = (log_2 + 2 + ffts_ctzl(~i >> (log_2 + 2)));
-        sum = ffts_dd2_add_dd2_unnormalized(&w[log_2 + 1], &w[offset]);
-        w[log_2] = ffts_dd2_mul_dd2(&h[log_2], &sum);
+        /* use lookup table when possible */
+        if (log_2 > step) {
+            offset = ((2 * i) >> step) + (4 << (log_2 - step));
+            if (offset >= COS_SIN_TABLE_SIZE) {
+                offset = COS_SIN_TABLE_SIZE - (2 << (log_2 - step)) - 4;
+                w[log_2].hi = _mm_loadr_pd(&cst[offset + 0].d);
+                w[log_2].lo = _mm_loadr_pd(&cst[offset + 2].d);
+            } else {
+                w[log_2].hi = _mm_load_pd(&cst[offset + 0].d);
+                w[log_2].lo = _mm_load_pd(&cst[offset + 2].d);
+            }
+        } else {
+            /* skip and find next trailing zero */
+            offset = (log_2 + 2 + ffts_ctzl(~i >> (log_2 + 2)));
+            sum = ffts_dd2_add_dd2_unnormalized(&w[log_2 + 1], &w[offset]);
+            w[log_2] = ffts_dd2_mul_dd2(&h[log_2], &sum);
+        }
     }
 
 mid_point:
@@ -915,9 +951,10 @@ int
 ffts_generate_cosine_sine_pow2_32f(ffts_cpx_32f *const table, int table_size)
 {
     const ffts_cpx_64f *FFTS_RESTRICT ct;
+    const ffts_double_t *FFTS_RESTRICT cst;
     const ffts_double_t *FFTS_RESTRICT hs;
     ffts_cpx_64f FFTS_ALIGN(16) w[32];
-    int i, log_2, offset;
+    int i, log_2, offset, step;
 
     /* size must be a power of two */
     if (!table || !table_size || (table_size & (table_size - 1))) {
@@ -938,13 +975,16 @@ ffts_generate_cosine_sine_pow2_32f(ffts_cpx_32f *const table, int table_size)
         goto mid_point;
     }
 
+    cst = (const ffts_double_t*)
+        FFTS_ASSUME_ALIGNED_32(&cos_sin_table);
+
     /* generate small tables from lookup table */
     if (table_size <= 128) {
-        const int step = 128 / table_size;
+        step = 128 / table_size;
 
         for (i = 1; i < table_size/2; i++) {
-            float cosine = (float) cos_sin_table[4 * i * step + 0].d;
-            float sine   = (float) cos_sin_table[4 * i * step + 2].d;
+            float cosine = (float) cst[4 * i * step + 0].d;
+            float sine   = (float) cst[4 * i * step + 1].d;
 
             table[i          + 0][0] = cosine;
             table[i          + 0][1] = -sine;
@@ -960,6 +1000,7 @@ ffts_generate_cosine_sine_pow2_32f(ffts_cpx_32f *const table, int table_size)
     log_2 = ffts_ctzl(table_size);
     FFTS_ASSUME(log_2 > 1);
     offset = 32 - log_2;
+    step = log_2 - 8;
     ct = (const ffts_cpx_64f*)
         FFTS_ASSUME_ALIGNED_32(&cos_sin_pi_table[4 * offset]);
     hs = FFTS_ASSUME_ALIGNED_16(&half_secant[2 * offset]);
@@ -980,10 +1021,23 @@ ffts_generate_cosine_sine_pow2_32f(ffts_cpx_32f *const table, int table_size)
         table[table_size - i][0] = (float)  w[log_2][1];
         table[table_size - i][1] = (float) -w[log_2][0];
 
-        /* skip and find next trailing zero */
-        offset = (log_2 + 2 + ffts_ctzl(~i >> (log_2 + 2)));
-        w[log_2][0] = hs[2 * log_2].d * (w[log_2 + 1][0] + w[offset][0]);
-        w[log_2][1] = hs[2 * log_2].d * (w[log_2 + 1][1] + w[offset][1]);
+        /* use lookup table when possible */
+        if (log_2 > step) {
+            offset = ((2 * i) >> step) + (4 << (log_2 - step));
+            if (offset >= 260) {
+                offset = 260 - (2 << (log_2 - step)) - 4;
+                w[log_2][0] = cst[offset + 0].d;
+                w[log_2][1] = cst[offset + 1].d;
+            } else {
+                w[log_2][0] = cst[offset + 0].d;
+                w[log_2][1] = cst[offset + 1].d;
+            }
+        } else {
+            /* skip and find next trailing zero */
+            offset = (log_2 + 2 + ffts_ctzl(~i >> (log_2 + 2)));
+            w[log_2][0] = hs[2 * log_2].d * (w[log_2 + 1][0] + w[offset][0]);
+            w[log_2][1] = hs[2 * log_2].d * (w[log_2 + 1][1] + w[offset][1]);
+        }
     }
 
 mid_point:
@@ -998,9 +1052,10 @@ int
 ffts_generate_cosine_sine_pow2_64f(ffts_cpx_64f *const table, int table_size)
 {
     const struct ffts_dd_t *FFTS_RESTRICT ct;
+    const ffts_double_t *FFTS_RESTRICT cst;
     const struct ffts_dd_t *FFTS_RESTRICT hs;
     struct ffts_dd_t FFTS_ALIGN(16) w[32][2];
-    int i, log_2, offset;
+    int i, log_2, offset, step;
 
     /* size must be a power of two */
     if (!table || !table_size || (table_size & (table_size - 1))) {
@@ -1021,13 +1076,16 @@ ffts_generate_cosine_sine_pow2_64f(ffts_cpx_64f *const table, int table_size)
         goto mid_point;
     }
 
+    cst = (const ffts_double_t*)
+        FFTS_ASSUME_ALIGNED_32(&cos_sin_table);
+
     /* generate small tables from lookup table */
     if (table_size <= 128) {
-        const int step = 128 / table_size;
+        step = 128 / table_size;
 
         for (i = 1; i < table_size/2; i++) {
-            double cosine = cos_sin_table[4 * i * step + 0].d;
-            double sine   = cos_sin_table[4 * i * step + 2].d;
+            double cosine = cst[4 * i * step + 0].d;
+            double sine   = cst[4 * i * step + 1].d;
 
             table[i          + 0][0] = cosine;
             table[i          + 0][1] = -sine;
@@ -1043,6 +1101,7 @@ ffts_generate_cosine_sine_pow2_64f(ffts_cpx_64f *const table, int table_size)
     log_2 = ffts_ctzl(table_size);
     FFTS_ASSUME(log_2 > 1);
     offset = 32 - log_2;
+    step = log_2 - 8;
     ct = (const struct ffts_dd_t*)
         FFTS_ASSUME_ALIGNED_32(&cos_sin_pi_table[4 * offset]);
     hs = (const struct ffts_dd_t*) &half_secant[2 * offset];
@@ -1066,12 +1125,29 @@ ffts_generate_cosine_sine_pow2_64f(ffts_cpx_64f *const table, int table_size)
         table[table_size - i][0] =  w[log_2][1].hi;
         table[table_size - i][1] = -w[log_2][0].hi;
 
-        /* skip and find next trailing zero */
-        offset = (log_2 + 2 + ffts_ctzl(~i >> (log_2 + 2)));
-        w[log_2][0] = ffts_dd_mul_dd(hs[log_2],
-            ffts_dd_add_dd_unnormalized(w[log_2 + 1][0], w[offset][0]));
-        w[log_2][1] = ffts_dd_mul_dd(hs[log_2],
-            ffts_dd_add_dd_unnormalized(w[log_2 + 1][1], w[offset][1]));
+        /* use lookup table when possible */
+        if (log_2 > step) {
+            offset = ((2 * i) >> step) + (4 << (log_2 - step));
+            if (offset >= 260) {
+                offset = 260 - (2 << (log_2 - step)) - 4;
+                w[log_2][0].hi = cst[offset + 1].d;
+                w[log_2][1].hi = cst[offset + 0].d;
+                w[log_2][0].lo = cst[offset + 3].d;
+                w[log_2][1].lo = cst[offset + 2].d;
+            } else {
+                w[log_2][0].hi = cst[offset + 0].d;
+                w[log_2][1].hi = cst[offset + 1].d;
+                w[log_2][0].lo = cst[offset + 2].d;
+                w[log_2][1].lo = cst[offset + 3].d;
+            }
+        } else {
+            /* skip and find next trailing zero */
+            offset = (log_2 + 2 + ffts_ctzl(~i >> (log_2 + 2)));
+            w[log_2][0] = ffts_dd_mul_dd(hs[log_2],
+                ffts_dd_add_dd_unnormalized(w[log_2 + 1][0], w[offset][0]));
+            w[log_2][1] = ffts_dd_mul_dd(hs[log_2],
+                ffts_dd_add_dd_unnormalized(w[log_2 + 1][1], w[offset][1]));
+        }
     }
 
 mid_point:

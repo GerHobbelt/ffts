@@ -2,8 +2,6 @@
 
 This file is part of FFTS -- The Fastest Fourier Transform in the South
 
-Copyright (c) 2012, Anthony M. Blake <amb@anthonix.com>
-Copyright (c) 2012, The University of Waikato
 Copyright (c) 2018, Jukka Ojanen <jukka.ojanen@kolumbus.fi>
 
 All rights reserved.
@@ -39,7 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 #endif
 
-#include <xmmintrin.h>
+#include <intrin.h>
 
 typedef __m128 V4SF;
 
@@ -97,162 +95,33 @@ V4SF_IMULJ(V4SF d, V4SF re, V4SF im)
 }
 
 #ifdef FFTS_DOUBLE
-typedef union {
-    struct {
-        double r1;
-        double i1;
-        double r2;
-        double i2;
-    } r;
-    uint32_t u[8];
-} V4DF;
+typedef __m256d V4DF;
 
-static FFTS_ALWAYS_INLINE V4DF
-V4DF_LIT4(double f3, double f2, double f1, double f0)
-{
-    V4DF z;
+#define V4DF_ADD  _mm256_add_pd
+#define V4DF_SUB  _mm256_sub_pd
+#define V4DF_MUL  _mm256_mul_pd
+#define V4DF_LIT4 _mm256_set_pd
+#define V4DF_XOR  _mm256_xor_pd
+#define V4DF_LD   _mm256_loadu_pd
+#define V4DF_ST   _mm256_storeu_pd
 
-    z.r.r1 = f0;
-    z.r.i1 = f1;
-    z.r.r2 = f2;
-    z.r.i2 = f3;
+#define V4DF_SWAP_PAIRS(x) \
+    (_mm256_permute_pd(x, (1 << 2) | (1 << 0)))
 
-    return z;
-}
+#define V4DF_BLEND(x, y) \
+    (_mm256_blend_pd(x, y, (1 << 3) | (1 << 2)))
 
-static FFTS_ALWAYS_INLINE V4DF
-V4DF_ADD(V4DF x, V4DF y)
-{
-    V4DF z;
+#define V4DF_UNPACK_HI(x, y) \
+    (_mm256_permute2f128_pd(x, y, (1 << 5) | (1 << 4) | (1 << 0)))
 
-    z.r.r1 = x.r.r1 + y.r.r1;
-    z.r.i1 = x.r.i1 + y.r.i1;
-    z.r.r2 = x.r.r2 + y.r.r2;
-    z.r.i2 = x.r.i2 + y.r.i2;
+#define V4DF_UNPACK_LO(x, y) \
+    (_mm256_permute2f128_pd(x, y, (1 << 5)))
 
-    return z;
-}
+#define V4DF_DUPLICATE_RE(x) \
+    (_mm256_movedup_pd(x))
 
-static FFTS_ALWAYS_INLINE V4DF
-V4DF_SUB(V4DF x, V4DF y)
-{
-    V4DF z;
-
-    z.r.r1 = x.r.r1 - y.r.r1;
-    z.r.i1 = x.r.i1 - y.r.i1;
-    z.r.r2 = x.r.r2 - y.r.r2;
-    z.r.i2 = x.r.i2 - y.r.i2;
-
-    return z;
-}
-
-static FFTS_ALWAYS_INLINE V4DF
-V4DF_MUL(V4DF x, V4DF y)
-{
-    V4DF z;
-
-    z.r.r1 = x.r.r1 * y.r.r1;
-    z.r.i1 = x.r.i1 * y.r.i1;
-    z.r.r2 = x.r.r2 * y.r.r2;
-    z.r.i2 = x.r.i2 * y.r.i2;
-
-    return z;
-}
-
-static FFTS_ALWAYS_INLINE V4DF
-V4DF_XOR(V4DF x, V4DF y)
-{
-    V4DF z;
-
-    z.u[0] = x.u[0] ^ y.u[0];
-    z.u[1] = x.u[1] ^ y.u[1];
-    z.u[2] = x.u[2] ^ y.u[2];
-    z.u[3] = x.u[3] ^ y.u[3];
-    z.u[4] = x.u[4] ^ y.u[4];
-    z.u[5] = x.u[5] ^ y.u[5];
-    z.u[6] = x.u[6] ^ y.u[6];
-    z.u[7] = x.u[7] ^ y.u[7];
-
-    return z;
-}
-
-static FFTS_ALWAYS_INLINE V4DF
-V4DF_SWAP_PAIRS(V4DF x)
-{
-    V4DF z;
-
-    z.r.r1 = x.r.i1;
-    z.r.i1 = x.r.r1;
-    z.r.r2 = x.r.i2;
-    z.r.i2 = x.r.r2;
-
-    return z;
-}
-
-static FFTS_ALWAYS_INLINE V4DF
-V4DF_BLEND(V4DF x, V4DF y)
-{
-    V4DF z;
-
-    z.r.r1 = x.r.r1;
-    z.r.i1 = x.r.i1;
-    z.r.r2 = y.r.r2;
-    z.r.i2 = y.r.i2;
-
-    return z;
-}
-
-static FFTS_ALWAYS_INLINE V4DF
-V4DF_UNPACK_HI(V4DF x, V4DF y)
-{
-    V4DF z;
-
-    z.r.r1 = x.r.r2;
-    z.r.i1 = x.r.i2;
-    z.r.r2 = y.r.r2;
-    z.r.i2 = y.r.i2;
-
-    return z;
-}
-
-static FFTS_ALWAYS_INLINE V4DF
-V4DF_UNPACK_LO(V4DF x, V4DF y)
-{
-    V4DF z;
-
-    z.r.r1 = x.r.r1;
-    z.r.i1 = x.r.i1;
-    z.r.r2 = y.r.r1;
-    z.r.i2 = y.r.i1;
-
-    return z;
-}
-
-static FFTS_ALWAYS_INLINE V4DF
-V4DF_DUPLICATE_RE(V4DF x)
-{
-    V4DF z;
-
-    z.r.r1 = x.r.r1;
-    z.r.i1 = x.r.r1;
-    z.r.r2 = x.r.r2;
-    z.r.i2 = x.r.r2;
-
-    return z;
-}
-
-static FFTS_ALWAYS_INLINE V4DF
-V4DF_DUPLICATE_IM(V4DF x)
-{
-    V4DF z;
-
-    z.r.r1 = x.r.i1;
-    z.r.i1 = x.r.i1;
-    z.r.r2 = x.r.i2;
-    z.r.i2 = x.r.i2;
-
-    return z;
-}
+#define V4DF_DUPLICATE_IM(x) \
+    (_mm256_permute_pd(x, (1 << 3) | (1 << 2) | (1 << 1) | (1 << 0)))
 
 static FFTS_ALWAYS_INLINE V4DF
 V4DF_IMUL(V4DF d, V4DF re, V4DF im)
@@ -271,45 +140,14 @@ V4DF_IMULJ(V4DF d, V4DF re, V4DF im)
 }
 
 static FFTS_ALWAYS_INLINE V4DF
-V4DF_MULI(int inv, V4DF x)
+V4DF_IMULI(int inv, V4DF a)
 {
-    V4DF z;
-
     if (inv) {
-        z.r.r1 = -x.r.r1;
-        z.r.i1 =  x.r.i1;
-        z.r.r2 = -x.r.r2;
-        z.r.i2 =  x.r.i2;
+        return V4DF_SWAP_PAIRS(V4DF_XOR(a, V4DF_LIT4(0.0, -0.0, 0.0, -0.0)));
     } else {
-        z.r.r1 =  x.r.r1;
-        z.r.i1 = -x.r.i1;
-        z.r.r2 =  x.r.r2;
-        z.r.i2 = -x.r.i2;
+        return V4DF_SWAP_PAIRS(V4DF_XOR(a, V4DF_LIT4(-0.0, 0.0, -0.0, 0.0)));
     }
-
-    return z;
-}
-
-static FFTS_ALWAYS_INLINE V4DF
-V4DF_IMULI(int inv, V4DF x)
-{
-    return V4DF_SWAP_PAIRS(V4DF_MULI(inv, x));
-}
-
-static FFTS_ALWAYS_INLINE V4DF
-V4DF_LD(const void *s)
-{
-    V4DF z;
-    memcpy(&z, s, sizeof(z));
-    return z;
-}
-
-static FFTS_ALWAYS_INLINE void
-V4DF_ST(void *d, V4DF s)
-{
-    V4DF *r = (V4DF*) d;
-    *r = s;
 }
 #endif
 
-#endif /* FFTS_MACROS_SSE_H */
+#endif /* FFTS_MACROS_AVX_H */

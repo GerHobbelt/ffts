@@ -4,6 +4,7 @@ This file is part of FFTS -- The Fastest Fourier Transform in the South
 
 Copyright (c) 2012, Anthony M. Blake <amb@anthonix.com>
 Copyright (c) 2012, The University of Waikato
+Copyright (c) 2018, Jukka Ojanen <jukka.ojanen@kolumbus.fi>
 
 All rights reserved.
 
@@ -258,6 +259,29 @@ static const FFTS_ALIGN(16) double ffts_constants_inv_64f[16] = {
     -0.7071067811865475244008443621048490392848359376884740
 };
 
+#ifdef FFTS_DOUBLE
+static FFTS_INLINE void
+V4DF_K_0(int inv,
+         V4DF *r0,
+         V4DF *r1,
+         V4DF *r2,
+         V4DF *r3)
+{
+    V4DF t0, t1, t2, t3;
+
+    t0 = *r0;
+    t1 = *r1;
+
+    t2 = V4DF_ADD(*r2, *r3);
+    t3 = V4DF_IMULI(inv, V4DF_SUB(*r2, *r3));
+
+    *r0 = V4DF_ADD(t0, t2);
+    *r2 = V4DF_SUB(t0, t2);
+    *r1 = V4DF_SUB(t1, t3);
+    *r3 = V4DF_ADD(t1, t3);
+}
+#endif
+
 static FFTS_INLINE void
 V4SF_K_0(int inv,
          V4SF *r0,
@@ -278,6 +302,31 @@ V4SF_K_0(int inv,
     *r1 = V4SF_SUB(t1, t3);
     *r3 = V4SF_ADD(t1, t3);
 }
+
+#ifdef FFTS_DOUBLE
+static FFTS_INLINE void
+V4DF_L_2(const double *FFTS_RESTRICT i0,
+         const double *FFTS_RESTRICT i1,
+         const double *FFTS_RESTRICT i2,
+         const double *FFTS_RESTRICT i3,
+         V4DF *r0,
+         V4DF *r1,
+         V4DF *r2,
+         V4DF *r3)
+{
+    V4DF t0, t1, t2, t3;
+
+    t0 = V4DF_LD(i0);
+    t1 = V4DF_LD(i1);
+    t2 = V4DF_LD(i2);
+    t3 = V4DF_LD(i3);
+
+    *r0 = V4DF_ADD(t0, t1);
+    *r1 = V4DF_SUB(t0, t1);
+    *r2 = V4DF_ADD(t2, t3);
+    *r3 = V4DF_SUB(t2, t3);
+}
+#endif
 
 static FFTS_INLINE void
 V4SF_L_2(const float *FFTS_RESTRICT i0,
@@ -301,6 +350,37 @@ V4SF_L_2(const float *FFTS_RESTRICT i0,
     *r2 = V4SF_ADD(t2, t3);
     *r3 = V4SF_SUB(t2, t3);
 }
+
+#ifdef FFTS_DOUBLE
+static FFTS_INLINE void
+V4DF_L_4(int inv,
+         const double *FFTS_RESTRICT i0,
+         const double *FFTS_RESTRICT i1,
+         const double *FFTS_RESTRICT i2,
+         const double *FFTS_RESTRICT i3,
+         V4DF *r0,
+         V4DF *r1,
+         V4DF *r2,
+         V4DF *r3)
+{
+    V4DF t0, t1, t2, t3, t4, t5, t6, t7;
+
+    t0 = V4DF_LD(i0);
+    t1 = V4DF_LD(i1);
+    t2 = V4DF_LD(i2);
+    t3 = V4DF_LD(i3);
+
+    t4 = V4DF_ADD(t0, t1);
+    t5 = V4DF_SUB(t0, t1);
+    t6 = V4DF_ADD(t2, t3);
+    t7 = V4DF_IMULI(inv, V4DF_SUB(t2, t3));
+
+    *r0 = V4DF_ADD(t4, t6);
+    *r2 = V4DF_SUB(t4, t6);
+    *r1 = V4DF_SUB(t5, t7);
+    *r3 = V4DF_ADD(t5, t7);
+}
+#endif
 
 static FFTS_INLINE void
 V4SF_L_4(int inv,
@@ -331,6 +411,36 @@ V4SF_L_4(int inv,
     *r3 = V4SF_ADD(t5, t7);
 }
 
+#ifdef FFTS_DOUBLE
+static FFTS_INLINE void
+V4DF_LEAF_EE(double *const FFTS_RESTRICT out,
+             const ptrdiff_t *FFTS_RESTRICT os,
+             const double    *FFTS_RESTRICT in,
+             const ptrdiff_t *FFTS_RESTRICT is,
+             int inv)
+{
+    const double *FFTS_RESTRICT LUT = inv ? ffts_constants_inv_64f : ffts_constants_64f;
+
+    V4DF r0, r1, r2, r3, r4, r5, r6, r7;
+
+    double *out0 = out + os[0];
+    double *out1 = out + os[1];
+
+    V4DF_L_4(inv, in + is[0], in + is[1], in + is[2], in + is[3], &r0, &r1, &r2, &r3);
+    V4DF_L_2(in + is[4], in + is[5], in + is[6], in + is[7], &r4, &r5, &r6, &r7);
+
+    V4DF_K_0(inv, &r0, &r2, &r4, &r6);
+    V4DF_K_N(inv, V4DF_LD(LUT + 0), V4DF_LD(LUT + 4), &r1, &r3, &r5, &r7);
+    V4DF_TX2(&r0, &r1);
+    V4DF_TX2(&r2, &r3);
+    V4DF_TX2(&r4, &r5);
+    V4DF_TX2(&r6, &r7);
+
+    V4DF_S_4(r0, r2, r4, r6, out0 + 0, out0 + 4, out0 + 8, out0 + 12);
+    V4DF_S_4(r1, r3, r5, r7, out1 + 0, out1 + 4, out1 + 8, out1 + 12);
+}
+#endif
+
 static FFTS_INLINE void
 V4SF_LEAF_EE(float *const FFTS_RESTRICT out,
              const ptrdiff_t *FFTS_RESTRICT os,
@@ -358,6 +468,36 @@ V4SF_LEAF_EE(float *const FFTS_RESTRICT out,
     V4SF_S_4(r0, r2, r4, r6, out0 + 0, out0 + 4, out0 + 8, out0 + 12);
     V4SF_S_4(r1, r3, r5, r7, out1 + 0, out1 + 4, out1 + 8, out1 + 12);
 }
+
+#ifdef FFTS_DOUBLE
+static FFTS_INLINE void
+V4DF_LEAF_EE2(double *const FFTS_RESTRICT out,
+              const ptrdiff_t *FFTS_RESTRICT os,
+              const double *FFTS_RESTRICT in,
+              const ptrdiff_t *FFTS_RESTRICT is,
+              int inv)
+{
+    const double *FFTS_RESTRICT LUT = inv ? ffts_constants_inv_64f : ffts_constants_64f;
+
+    V4DF r0, r1, r2, r3, r4, r5, r6, r7;
+
+    double *out0 = out + os[0];
+    double *out1 = out + os[1];
+
+    V4DF_L_4(inv, in + is[6], in + is[7], in + is[4], in + is[5], &r0, &r1, &r2, &r3);
+    V4DF_L_2(in + is[0], in + is[1], in + is[3], in + is[2], &r4, &r5, &r6, &r7);
+
+    V4DF_K_0(inv, &r0, &r2, &r4, &r6);
+    V4DF_K_N(inv, V4DF_LD(LUT + 0), V4DF_LD(LUT + 4), &r1, &r3, &r5, &r7);
+    V4DF_TX2(&r0, &r1);
+    V4DF_TX2(&r2, &r3);
+    V4DF_TX2(&r4, &r5);
+    V4DF_TX2(&r6, &r7);
+
+    V4DF_S_4(r0, r2, r4, r6, out0 + 0, out0 + 4, out0 + 8, out0 + 12);
+    V4DF_S_4(r1, r3, r5, r7, out1 + 0, out1 + 4, out1 + 8, out1 + 12);
+}
+#endif
 
 static FFTS_INLINE void
 V4SF_LEAF_EE2(float *const FFTS_RESTRICT out,
@@ -387,6 +527,30 @@ V4SF_LEAF_EE2(float *const FFTS_RESTRICT out,
     V4SF_S_4(r1, r3, r5, r7, out1 + 0, out1 + 4, out1 + 8, out1 + 12);
 }
 
+#ifdef FFTS_DOUBLE
+static FFTS_INLINE void
+V4DF_LEAF_EO(double *const FFTS_RESTRICT out,
+             const ptrdiff_t *FFTS_RESTRICT os,
+             const double *FFTS_RESTRICT in,
+             const ptrdiff_t *FFTS_RESTRICT is,
+             int inv)
+{
+    const double *FFTS_RESTRICT LUT = inv ? ffts_constants_inv_64f : ffts_constants_64f;
+
+    V4DF r0, r1, r2, r3, r4, r5, r6, r7;
+
+    double *out0 = out + os[0];
+    double *out1 = out + os[1];
+
+    V4DF_L_4_4(inv, in + is[0], in + is[1], in + is[2], in + is[3], &r0, &r1, &r2, &r3);
+    V4DF_L_2_4(inv, in + is[4], in + is[5], in + is[6], in + is[7], &r4, &r5, &r6, &r7);
+
+    V4DF_S_4(r2, r3, r7, r6, out1 + 0, out1 + 4, out1 + 8, out1 + 12);
+    V4DF_K_N(inv, V4DF_LD(LUT + 8), V4DF_LD(LUT + 12), &r0, &r1, &r4, &r5);
+    V4DF_S_4(r0, r1, r4, r5, out0 + 0, out0 + 4, out0 + 8, out0 + 12);
+}
+#endif
+
 static FFTS_INLINE void
 V4SF_LEAF_EO(float *const FFTS_RESTRICT out,
              const ptrdiff_t *FFTS_RESTRICT os,
@@ -408,6 +572,30 @@ V4SF_LEAF_EO(float *const FFTS_RESTRICT out,
     V4SF_K_N(inv, V4SF_LD(LUT + 8), V4SF_LD(LUT + 12), &r0, &r1, &r4, &r5);
     V4SF_S_4(r0, r1, r4, r5, out0 + 0, out0 + 4, out0 + 8, out0 + 12);
 }
+
+#ifdef FFTS_DOUBLE
+static FFTS_INLINE void
+V4DF_LEAF_OE(double *const FFTS_RESTRICT out,
+             const ptrdiff_t *FFTS_RESTRICT os,
+             const double *FFTS_RESTRICT in,
+             const ptrdiff_t *FFTS_RESTRICT is,
+             int inv)
+{
+    const double *FFTS_RESTRICT LUT = inv ? ffts_constants_inv_64f : ffts_constants_64f;
+
+    V4DF r0, r1, r2, r3, r4, r5, r6, r7;
+
+    double *out0 = out + os[0];
+    double *out1 = out + os[1];
+
+    V4DF_L_4_2(inv, in + is[0], in + is[1], in + is[2], in + is[3], &r0, &r1, &r2, &r3);
+    V4DF_L_4_4(inv, in + is[6], in + is[7], in + is[4], in + is[5], &r4, &r5, &r6, &r7);
+
+    V4DF_S_4(r0, r1, r4, r5, out0 + 0, out0 + 4, out0 + 8, out0 + 12);
+    V4DF_K_N(inv, V4DF_LD(LUT + 8), V4DF_LD(LUT + 12), &r6, &r7, &r2, &r3);
+    V4DF_S_4(r6, r7, r2, r3, out1 + 0, out1 + 4, out1 + 8, out1 + 12);
+}
+#endif
 
 static FFTS_INLINE void
 V4SF_LEAF_OE(float *const FFTS_RESTRICT out,
@@ -431,6 +619,27 @@ V4SF_LEAF_OE(float *const FFTS_RESTRICT out,
     V4SF_S_4(r6, r7, r2, r3, out1 + 0, out1 + 4, out1 + 8, out1 + 12);
 }
 
+#ifdef FFTS_DOUBLE
+static FFTS_INLINE void
+V4DF_LEAF_OO(double *const FFTS_RESTRICT out,
+             const ptrdiff_t *FFTS_RESTRICT os,
+             const double *FFTS_RESTRICT in,
+             const ptrdiff_t *FFTS_RESTRICT is,
+             int inv)
+{
+    V4DF r0, r1, r2, r3, r4, r5, r6, r7;
+
+    double *out0 = out + os[0];
+    double *out1 = out + os[1];
+
+    V4DF_L_4_4(inv, in + is[0], in + is[1], in + is[2], in + is[3], &r0, &r1, &r2, &r3);
+    V4DF_L_4_4(inv, in + is[6], in + is[7], in + is[4], in + is[5], &r4, &r5, &r6, &r7);
+
+    V4DF_S_4(r0, r1, r4, r5, out0 + 0, out0 + 4, out0 + 8, out0 + 12);
+    V4DF_S_4(r2, r3, r6, r7, out1 + 0, out1 + 4, out1 + 8, out1 + 12);
+}
+#endif
+
 static FFTS_INLINE void
 V4SF_LEAF_OO(float *const FFTS_RESTRICT out,
              const ptrdiff_t *FFTS_RESTRICT os,
@@ -449,6 +658,34 @@ V4SF_LEAF_OO(float *const FFTS_RESTRICT out,
     V4SF_S_4(r0, r1, r4, r5, out0 + 0, out0 + 4, out0 + 8, out0 + 12);
     V4SF_S_4(r2, r3, r6, r7, out1 + 0, out1 + 4, out1 + 8, out1 + 12);
 }
+
+#ifdef FFTS_DOUBLE
+static FFTS_INLINE void
+V4DF_X_4(int inv,
+         double *FFTS_RESTRICT data,
+         size_t N,
+         const double *FFTS_RESTRICT LUT)
+{
+    size_t i;
+
+    for (i = 0; i < N/8; i++) {
+        V4DF r0 = V4DF_LD(data);
+        V4DF r1 = V4DF_LD(data + 2*N/4);
+        V4DF r2 = V4DF_LD(data + 4*N/4);
+        V4DF r3 = V4DF_LD(data + 6*N/4);
+
+        V4DF_K_N(inv, V4DF_LD(LUT), V4DF_LD(LUT + 4), &r0, &r1, &r2, &r3);
+
+        V4DF_ST(data        , r0);
+        V4DF_ST(data + 2*N/4, r1);
+        V4DF_ST(data + 4*N/4, r2);
+        V4DF_ST(data + 6*N/4, r3);
+
+        LUT += 8;
+        data += 4;
+    }
+}
+#endif
 
 static FFTS_INLINE void
 V4SF_X_4(int inv,
@@ -536,6 +773,68 @@ V4SF_X_8(int inv,
     }
 }
 
+#ifdef FFTS_DOUBLE
+static FFTS_INLINE void
+V4DF_X_8(int inv,
+         double *FFTS_RESTRICT data0,
+         size_t N,
+         const double *FFTS_RESTRICT LUT)
+{
+    double *data1 = data0 + 1*N/4;
+    double *data2 = data0 + 2*N/4;
+    double *data3 = data0 + 3*N/4;
+    double *data4 = data0 + 4*N/4;
+    double *data5 = data0 + 5*N/4;
+    double *data6 = data0 + 6*N/4;
+    double *data7 = data0 + 7*N/4;
+    size_t i;
+
+    for (i = 0; i < N/16; i++) {
+        V4DF r0, r1, r2, r3, r4, r5, r6, r7;
+
+        r0 = V4DF_LD(data0);
+        r1 = V4DF_LD(data1);
+        r2 = V4DF_LD(data2);
+        r3 = V4DF_LD(data3);
+
+        V4DF_K_N(inv, V4DF_LD(LUT), V4DF_LD(LUT + 4), &r0, &r1, &r2, &r3);
+        r4 = V4DF_LD(data4);
+        r6 = V4DF_LD(data6);
+
+        V4DF_K_N(inv, V4DF_LD(LUT + 8), V4DF_LD(LUT + 12), &r0, &r2, &r4, &r6);
+        r5 = V4DF_LD(data5);
+        r7 = V4DF_LD(data7);
+
+        V4DF_K_N(inv, V4DF_LD(LUT + 16), V4DF_LD(LUT + 20), &r1, &r3, &r5, &r7);
+        LUT += 24;
+
+        V4DF_ST(data0, r0);
+        data0 += 4;
+
+        V4DF_ST(data1, r1);
+        data1 += 4;
+
+        V4DF_ST(data2, r2);
+        data2 += 4;
+
+        V4DF_ST(data3, r3);
+        data3 += 4;
+
+        V4DF_ST(data4, r4);
+        data4 += 4;
+
+        V4DF_ST(data5, r5);
+        data5 += 4;
+
+        V4DF_ST(data6, r6);
+        data6 += 4;
+
+        V4DF_ST(data7, r7);
+        data7 += 4;
+    }
+}
+#endif
+
 static FFTS_INLINE void
 ffts_static_firstpass_odd_32f(float *const FFTS_RESTRICT out,
                               const float *FFTS_RESTRICT in,
@@ -568,6 +867,41 @@ ffts_static_firstpass_odd_32f(float *const FFTS_RESTRICT out,
         os += 2;
     }
 }
+
+#ifdef FFTS_DOUBLE
+static FFTS_INLINE void
+ffts_static_firstpass_odd_64f(double *const FFTS_RESTRICT out,
+                              const double *FFTS_RESTRICT in,
+                              const ffts_plan_t *FFTS_RESTRICT p,
+                              int inv)
+{
+    size_t i, i0 = p->i0, i1 = p->i1;
+    const ptrdiff_t *is = (const ptrdiff_t*) p->is;
+    const ptrdiff_t *os = (const ptrdiff_t*) p->offsets;
+
+    for (i = i0; i > 0; --i) {
+        V4DF_LEAF_EE(out, os, in, is, inv);
+        in += 4;
+        os += 2;
+    }
+
+    for (i = i1; i > 0; --i) {
+        V4DF_LEAF_OO(out, os, in, is, inv);
+        in += 4;
+        os += 2;
+    }
+
+    V4DF_LEAF_OE(out, os, in, is, inv);
+    in += 4;
+    os += 2;
+
+    for (i = i1; i > 0; --i) {
+        V4DF_LEAF_EE2(out, os, in, is, inv);
+        in += 4;
+        os += 2;
+    }
+}
+#endif
 
 void
 ffts_small_2_32f(ffts_plan_t *p, const void *in, void *out)
@@ -789,23 +1123,23 @@ ffts_small_forward8_32f(ffts_plan_t *p, const void *in, void *out)
     V4SF_S_4(r0_1, r2_3, r4_5, r6_7, dout+0, dout+4, dout+8, dout+12);
 }
 
+#ifdef FFTS_DOUBLE
 void
 ffts_small_forward8_64f(ffts_plan_t *p, const void *in, void *out)
 {
+    const double *FFTS_RESTRICT lut = ffts_constants_small_64f;
     const double *din = (const double*) in;
     double *dout = (double*) out;
-//  V4SF r0_1, r2_3, r4_5, r6_7;
-//  double *LUT8 = (double*) p->ws + p->ws_is[0];
+    V4DF r0_1, r2_3, r4_5, r6_7;
+    
+    /* unreferenced parameter */
     (void) p;
-    (void) din;
-    (void) dout;
 
-#if MACROS_READY
-    L_4_2(0, din, din+8, din+4, din+12, &r0_1, &r2_3, &r4_5, &r6_7);
-    K_N(0, VLD(LUT8), VLD(LUT8+4), &r0_1, &r2_3, &r4_5, &r6_7);
-    S_4(r0_1, r2_3, r4_5, r6_7, dout+0, dout+4, dout+8, dout+12);
-#endif
+    V4DF_L_4_2(0, din, din+8, din+4, din+12, &r0_1, &r2_3, &r4_5, &r6_7);
+    V4DF_K_N(0, V4DF_LD(lut), V4DF_LD(lut + 4), &r0_1, &r2_3, &r4_5, &r6_7);
+    V4DF_S_4(r0_1, r2_3, r4_5, r6_7, dout+0, dout+4, dout+8, dout+12);
 }
+#endif
 
 void
 ffts_small_backward8_32f(ffts_plan_t *p, const void *in, void *out)
@@ -823,24 +1157,23 @@ ffts_small_backward8_32f(ffts_plan_t *p, const void *in, void *out)
     V4SF_S_4(r0_1, r2_3, r4_5, r6_7, dout+0, dout+4, dout+8, dout+12);
 }
 
+#ifdef FFTS_DOUBLE
 void
 ffts_small_backward8_64f(ffts_plan_t *p, const void *in, void *out)
 {
+    const double *FFTS_RESTRICT lut = ffts_constants_small_inv_64f;
     const double *din = (const double*) in;
     double *dout = (double*) out;
-//  V4SF r0_1, r2_3, r4_5, r6_7;
-//  double *LUT8 = (double*) p->ws + p->ws_is[0];
+    V4DF r0_1, r2_3, r4_5, r6_7;
+
+    /* unreferenced parameter */
     (void) p;
-    (void) din;
-    (void) dout;
 
-
-#if MACROS_READY
-    L_4_2(1, din, din+8, din+4, din+12, &r0_1, &r2_3, &r4_5, &r6_7);
-    K_N(1, VLD(LUT8), VLD(LUT8+4), &r0_1, &r2_3, &r4_5, &r6_7);
-    S_4(r0_1, r2_3, r4_5, r6_7, dout+0, dout+4, dout+8, dout+12);
-#endif
+    V4DF_L_4_2(1, din, din+8, din+4, din+12, &r0_1, &r2_3, &r4_5, &r6_7);
+    V4DF_K_N(1, V4DF_LD(lut), V4DF_LD(lut+4), &r0_1, &r2_3, &r4_5, &r6_7);
+    V4DF_S_4(r0_1, r2_3, r4_5, r6_7, dout+0, dout+4, dout+8, dout+12);
 }
+#endif
 
 void
 ffts_small_forward16_32f(ffts_plan_t *p, const void *in, void *out)
@@ -862,27 +1195,27 @@ ffts_small_forward16_32f(ffts_plan_t *p, const void *in, void *out)
     V4SF_S_4(r2_3, r6_7, r10_11, r14_15, dout+4, dout+12, dout+20, dout+28);
 }
 
+#ifdef FFTS_DOUBLE
 void
 ffts_small_forward16_64f(ffts_plan_t *p, const void *in, void *out)
 {
+    const double *FFTS_RESTRICT lut = ffts_constants_small_64f;
     const double *din = (const double*) in;
     double *dout = (double*) out;
-//  double *LUT8 = (double*) p->ws;
-//  V4SF r0_1, r2_3, r4_5, r6_7, r8_9, r10_11, r12_13, r14_15;
-    (void) p;
-    (void) din;
-    (void) dout;
+    V4DF r0_1, r2_3, r4_5, r6_7, r8_9, r10_11, r12_13, r14_15;
 
-#ifdef MACROS_READY
-    L_4_4(0, din+0, din+16, din+8, din+24, &r0_1, &r2_3, &r8_9, &r10_11);
-    L_2_4(0, din+4, din+20, din+28, din+12, &r4_5, &r6_7, &r14_15, &r12_13);
-    K_N(0, VLD(LUT8), VLD(LUT8+4), &r0_1, &r2_3, &r4_5, &r6_7);
-    K_N(0, VLD(LUT8+8), VLD(LUT8+12), &r0_1, &r4_5, &r8_9, &r12_13);
-    S_4(r0_1, r4_5, r8_9, r12_13, dout+0, dout+8, dout+16, dout+24);
-    K_N(0, VLD(LUT8+16), VLD(LUT8+20), &r2_3, &r6_7, &r10_11, &r14_15);
-    S_4(r2_3, r6_7, r10_11, r14_15, dout+4, dout+12, dout+20, dout+28);
-#endif
+    /* unreferenced parameter */
+    (void) p;
+
+    V4DF_L_4_4(0, din+0, din+16, din+8, din+24, &r0_1, &r2_3, &r8_9, &r10_11);
+    V4DF_L_2_4(0, din+4, din+20, din+28, din+12, &r4_5, &r6_7, &r14_15, &r12_13);
+    V4DF_K_N(0, V4DF_LD(lut), V4DF_LD(lut+4), &r0_1, &r2_3, &r4_5, &r6_7);
+    V4DF_K_N(0, V4DF_LD(lut+8), V4DF_LD(lut+12), &r0_1, &r4_5, &r8_9, &r12_13);
+    V4DF_S_4(r0_1, r4_5, r8_9, r12_13, dout+0, dout+8, dout+16, dout+24);
+    V4DF_K_N(0, V4DF_LD(lut+16), V4DF_LD(lut+20), &r2_3, &r6_7, &r10_11, &r14_15);
+    V4DF_S_4(r2_3, r6_7, r10_11, r14_15, dout+4, dout+12, dout+20, dout+28);
 }
+#endif
 
 void
 ffts_small_backward16_32f(ffts_plan_t *p, const void *in, void *out)
@@ -904,27 +1237,27 @@ ffts_small_backward16_32f(ffts_plan_t *p, const void *in, void *out)
     V4SF_S_4(r2_3, r6_7, r10_11, r14_15, dout+4, dout+12, dout+20, dout+28);
 }
 
+#ifdef FFTS_DOUBLE
 void
 ffts_small_backward16_64f(ffts_plan_t *p, const void *in, void *out)
 {
+    const double *FFTS_RESTRICT lut = ffts_constants_small_inv_64f;
     const double *din = (const double*) in;
     double *dout = (double*) out;
-//  double *LUT8 = (double*) p->ws;
-//  V4SF r0_1, r2_3, r4_5, r6_7, r8_9, r10_11, r12_13, r14_15;
+    V4DF r0_1, r2_3, r4_5, r6_7, r8_9, r10_11, r12_13, r14_15;
+    
+    /* unreferenced parameter */
     (void) p;
-    (void) din;
-    (void) dout;
 
-#ifdef MACROS_READY
-    L_4_4(1, din+0, din+16, din+8, din+24, &r0_1, &r2_3, &r8_9, &r10_11);
-    L_2_4(1, din+4, din+20, din+28, din+12, &r4_5, &r6_7, &r14_15, &r12_13);
-    K_N(1, VLD(LUT8), VLD(LUT8+4), &r0_1, &r2_3, &r4_5, &r6_7);
-    K_N(1, VLD(LUT8+8), VLD(LUT8+12),&r0_1, &r4_5, &r8_9, &r12_13);
-    S_4(r0_1, r4_5, r8_9, r12_13, dout+0, dout+8, dout+16, dout+24);
-    K_N(1, VLD(LUT8+16), VLD(LUT8+20), &r2_3, &r6_7, &r10_11, &r14_15);
-    S_4(r2_3, r6_7, r10_11, r14_15, dout+4, dout+12, dout+20, dout+28);
-#endif
+    V4DF_L_4_4(1, din+0, din+16, din+8, din+24, &r0_1, &r2_3, &r8_9, &r10_11);
+    V4DF_L_2_4(1, din+4, din+20, din+28, din+12, &r4_5, &r6_7, &r14_15, &r12_13);
+    V4DF_K_N(1, V4DF_LD(lut), V4DF_LD(lut+4), &r0_1, &r2_3, &r4_5, &r6_7);
+    V4DF_K_N(1, V4DF_LD(lut+8), V4DF_LD(lut+12), &r0_1, &r4_5, &r8_9, &r12_13);
+    V4DF_S_4(r0_1, r4_5, r8_9, r12_13, dout+0, dout+8, dout+16, dout+24);
+    V4DF_K_N(1, V4DF_LD(lut+16), V4DF_LD(lut+20), &r2_3, &r6_7, &r10_11, &r14_15);
+    V4DF_S_4(r2_3, r6_7, r10_11, r14_15, dout+4, dout+12, dout+20, dout+28);
 }
+#endif
 
 static FFTS_INLINE void
 ffts_static_firstpass_even_32f(float *FFTS_RESTRICT out,
@@ -958,6 +1291,41 @@ ffts_static_firstpass_even_32f(float *FFTS_RESTRICT out,
         os += 2;
     }
 }
+
+#ifdef FFTS_DOUBLE
+static FFTS_INLINE void
+ffts_static_firstpass_even_64f(double *FFTS_RESTRICT out,
+                               const double *FFTS_RESTRICT in,
+                               const ffts_plan_t *FFTS_RESTRICT p,
+                               int inv)
+{
+    size_t i, i0 = p->i0, i1 = p->i1;
+    const ptrdiff_t *is = (const ptrdiff_t*) p->is;
+    const ptrdiff_t *os = (const ptrdiff_t*) p->offsets;
+
+    for(i = i0; i > 0; --i) {
+        V4DF_LEAF_EE(out, os, in, is, inv);
+        in += 4;
+        os += 2;
+    }
+
+    V4DF_LEAF_EO(out, os, in, is, inv);
+    in += 4;
+    os += 2;
+
+    for (i = i1; i > 0; --i) {
+        V4DF_LEAF_OO(out, os, in, is, inv);
+        in += 4;
+        os += 2;
+    }
+
+    for (i = i1; i > 0; --i) {
+        V4DF_LEAF_EE2(out, os, in, is, inv);
+        in += 4;
+        os += 2;
+    }
+}
+#endif
 
 static void
 ffts_static_rec_f_32f(const ffts_plan_t *p, float *data, size_t N)
@@ -1035,6 +1403,47 @@ ffts_static_rec_f_32f(const ffts_plan_t *p, float *data, size_t N)
 #endif
 }
 
+#ifdef FFTS_DOUBLE
+static void
+ffts_static_rec_f_64f(const ffts_plan_t *p, double *data, size_t N)
+{
+    const double *ws = (const double*) p->ws;
+
+    if (N > 128) {
+        const size_t N1 = N >> 1;
+        const size_t N2 = N >> 2;
+        const size_t N3 = N >> 3;
+
+        ffts_static_rec_f_64f(p, data              , N2);
+        ffts_static_rec_f_64f(p, data +     N1     , N3);
+        ffts_static_rec_f_64f(p, data +     N1 + N2, N3);
+        ffts_static_rec_f_64f(p, data + N          , N2);
+        ffts_static_rec_f_64f(p, data + N + N1     , N2);
+
+        V4DF_X_8(0, data, N, ws + (p->ws_is[ffts_ctzl(N) - 4] << 1));
+    } else if (N == 128) {
+        const double *ws1 = ws + (p->ws_is[1] << 1);
+
+        V4DF_X_8(0, data +   0,  32, ws1);
+        V4DF_X_4(0, data +  64,  16, ws);
+        V4DF_X_4(0, data +  96,  16, ws);
+        V4DF_X_8(0, data + 128,  32, ws1);
+        V4DF_X_8(0, data + 192,  32, ws1);
+
+        V4DF_X_8(0, data, 128, ws + (p->ws_is[3] << 1));
+    } else if (N == 64) {
+        V4DF_X_4(0, data +  0, 16, ws);
+        V4DF_X_4(0, data + 64, 16, ws);
+        V4DF_X_4(0, data + 96, 16, ws);
+
+        V4DF_X_8(0, data, 64, ws + (p->ws_is[2] << 1));
+    } else {
+        assert(N == 32);
+        V4DF_X_8(0, data, 32, ws + (p->ws_is[1] << 1));
+    }
+}
+#endif
+
 static void
 ffts_static_rec_i_32f(const ffts_plan_t *p, float *data, size_t N)
 {
@@ -1111,6 +1520,47 @@ ffts_static_rec_i_32f(const ffts_plan_t *p, float *data, size_t N)
 #endif
 }
 
+#ifdef FFTS_DOUBLE
+static void
+ffts_static_rec_i_64f(const ffts_plan_t *p, double *data, size_t N)
+{
+    const double *ws = (const double*) p->ws;
+
+    if (N > 128) {
+        const size_t N1 = N >> 1;
+        const size_t N2 = N >> 2;
+        const size_t N3 = N >> 3;
+
+        ffts_static_rec_i_64f(p, data              , N2);
+        ffts_static_rec_i_64f(p, data +     N1     , N3);
+        ffts_static_rec_i_64f(p, data +     N1 + N2, N3);
+        ffts_static_rec_i_64f(p, data + N          , N2);
+        ffts_static_rec_i_64f(p, data + N + N1     , N2);
+
+        V4DF_X_8(1, data, N, ws + (p->ws_is[ffts_ctzl(N) - 4] << 1));
+    } else if (N == 128) {
+        const double *ws1 = ws + (p->ws_is[1] << 1);
+
+        V4DF_X_8(1, data +   0, 32, ws1);
+        V4DF_X_4(1, data +  64, 16, ws);
+        V4DF_X_4(1, data +  96, 16, ws);
+        V4DF_X_8(1, data + 128, 32, ws1);
+        V4DF_X_8(1, data + 192, 32, ws1);
+
+        V4DF_X_8(1, data, 128, ws + (p->ws_is[3] << 1));
+    } else if (N == 64) {
+        V4DF_X_4(1, data +  0, 16, ws);
+        V4DF_X_4(1, data + 64, 16, ws);
+        V4DF_X_4(1, data + 96, 16, ws);
+
+        V4DF_X_8(1, data, 64, ws + (p->ws_is[2] << 1));
+    } else {
+        assert(N == 32);
+        V4DF_X_8(1, data, 32, ws + (p->ws_is[1] << 1));
+    }
+}
+#endif
+
 void
 ffts_static_transform_f_32f(ffts_plan_t *p, const void *in, void *out)
 {
@@ -1172,6 +1622,26 @@ ffts_static_transform_f_32f(ffts_plan_t *p, const void *in, void *out)
 #endif
 }
 
+#ifdef FFTS_DOUBLE
+void
+ffts_static_transform_f_64f(ffts_plan_t *p, const void *in, void *out)
+{
+    const double *din = (const double*) in;
+    double *dout = (double*) out;
+
+    const size_t N = p->N;
+    const int N_log_2 = ffts_ctzl(N);
+
+    if (N_log_2 & 1) {
+        ffts_static_firstpass_odd_64f(dout, din, p, 0);
+    } else {
+        ffts_static_firstpass_even_64f(dout, din, p, 0);
+    }
+
+    ffts_static_rec_f_64f(p, dout, N);
+}
+#endif
+
 void
 ffts_static_transform_i_32f(ffts_plan_t *p, const void *in, void *out)
 {
@@ -1232,3 +1702,23 @@ ffts_static_transform_i_32f(ffts_plan_t *p, const void *in, void *out)
     ffts_static_rec_i_32f(p, dout, N);
 #endif
 }
+
+#ifdef FFTS_DOUBLE
+void
+ffts_static_transform_i_64f(ffts_plan_t *p, const void *in, void *out)
+{
+    const double *din = (const double*) in;
+    double *dout = (double*) out;
+
+    const size_t N = p->N;
+    const int N_log_2 = ffts_ctzl(N);
+
+    if (N_log_2 & 1) {
+        ffts_static_firstpass_odd_64f(dout, din, p, 1);
+    } else {
+        ffts_static_firstpass_even_64f(dout, din, p, 1);
+    }
+
+    ffts_static_rec_i_64f(p, dout, N);
+}
+#endif

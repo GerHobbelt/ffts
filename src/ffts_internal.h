@@ -55,19 +55,31 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stddef.h>
 
-#ifdef HAVE_STDINT_H
+#ifdef HAVE_INTTYPES_H
+#include <inttypes.h>
+#elif HAVE_STDINT_H
 #include <stdint.h>
+#elif _MSC_VER
+typedef __int32 int32_t;
+typedef __int64 int64_t;
+typedef unsigned __int32 uint32_t;
+typedef unsigned __int64 uint64_t;
+#else
+typedef signed long int	int32_t;
+typedef unsigned long int uint32_t;
+typedef signed long long int int64_t; 
+typedef unsigned long long int uint64_t;
 #endif
 
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
 
-#include <stdio.h>
-
-#if defined(HAVE_DECL_ALIGNED_ALLOC) && !HAVE_DECL_ALIGNED_ALLOC
-extern void *aligned_alloc(size_t, size_t);
+#ifdef HAVE_STRING_H
+#include <string.h>
 #endif
+
+#include <stdio.h>
 
 #if defined(HAVE_DECL_MEMALIGN) && !HAVE_DECL_MEMALIGN
 extern void *memalign(size_t, size_t);
@@ -205,12 +217,10 @@ struct _ffts_plan_t {
 static FFTS_INLINE void*
 ffts_aligned_malloc(size_t size)
 {
-    void *p;
+    void *p = NULL;
 
     /* various ways to allocate aligned memory in order of preferance */
-#if defined(HAVE_ALIGNED_ALLOC)
-    p = aligned_alloc(32, size);
-#elif defined(__ICC) || defined(__INTEL_COMPILER) || defined(HAVE__MM_MALLOC)
+#if defined(__ICC) || defined(__INTEL_COMPILER) || defined(HAVE__MM_MALLOC)
     p = (void*) _mm_malloc(size, 32);
 #elif defined(HAVE_POSIX_MEMALIGN)
     if (posix_memalign(&p, 32, size))
@@ -234,9 +244,7 @@ static FFTS_INLINE
 void ffts_aligned_free(void *p)
 {
     /* order must match with ffts_aligned_malloc */
-#if defined(HAVE_ALIGNED_ALLOC)
-    free(p);
-#elif defined(__ICC) || defined(__INTEL_COMPILER) || defined(HAVE__MM_MALLOC)
+#if defined(__ICC) || defined(__INTEL_COMPILER) || defined(HAVE__MM_MALLOC)
     _mm_free(p);
 #elif defined(HAVE_POSIX_MEMALIGN) || defined(HAVE_MEMALIGN)
     free(p);
